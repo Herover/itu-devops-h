@@ -88,6 +88,8 @@ public class WebApplication {
     // The ID of the latest request made by the simulator
     public static int LATEST = 0;
 
+    private static final String USERNAME = "username";
+
     private static final Gravatar gravatar = new Gravatar()
             .setSize(48)
             .setRating(GravatarRating.GENERAL_AUDIENCES)
@@ -187,7 +189,7 @@ public class WebApplication {
     public static ResultSet getUser(Connection conn, Integer userId) throws SQLException {
         if (userId == null) return null;
 
-        var statement = conn.prepareStatement("select * from user where user_id = ?");
+        var statement = conn.prepareStatement("select * from \"user\" where user_id = ?");
 
         statement.setInt(1, userId);
         ResultSet rs = statement.executeQuery();
@@ -195,15 +197,15 @@ public class WebApplication {
         return rs;
     }
 
-    public static int getUserID(SQLite db, String username) throws SQLException {
+    public static int getUserID(SqlDatabase db, String username) throws SQLException {
         var conn = db.getConnection();
-        var statement = conn.prepareStatement("select user_id from user where username = ?");
+        var statement = conn.prepareStatement("select user_id from \"user\" where username = ?");
 
         statement.setString(1, username);
         ResultSet rs = statement.executeQuery();
 
         // No user with that username found
-        if (rs.isClosed()) {
+        if (rs.isClosed() || !rs.next()) {
             conn.close();
             return 0;
         }
@@ -214,12 +216,12 @@ public class WebApplication {
     }
 
     public static ArrayList<HashMap<String, Object>> getMessages() throws SQLException {
-        var db = new SQLite();
+        var db = new SqlDatabase();
         var conn = db.getConnection();
 
         var messageStmt = conn.prepareStatement(
-                "select message.*, user.* from message, user\n" +
-                        "        where message.flagged = 0 and message.author_id = user.user_id\n" +
+                "select message.*, \"user\".* from message, \"user\"\n" +
+                        "        where message.flagged = 0 and message.author_id = \"user\".user_id\n" +
                         "        order by message.pub_date desc limit ?");
         messageStmt.setInt(1, PER_PAGE);
         var messages = new ArrayList<HashMap<String, Object>>();
@@ -231,7 +233,7 @@ public class WebApplication {
             result.put("text", messageRs.getString("text"));
             result.put("pub_date", messageRs.getInt("pub_date"));
             result.put("flagged", messageRs.getInt("flagged"));
-            result.put("username", messageRs.getString("username"));
+            result.put(USERNAME, messageRs.getString(USERNAME));
             result.put("email", messageRs.getString("email"));
             messages.add(result);
         }
@@ -292,7 +294,7 @@ public class WebApplication {
     }
 
     public static String register(String username, String email, String password, String password2) throws SQLException {
-        var db = new SQLite();
+        var db = new SqlDatabase();
         if (username == null
                 || username.equals("")) {
             return "You have to enter a username";
@@ -315,13 +317,14 @@ public class WebApplication {
         else {
             String saltedPW = BCrypt.hashpw(password, BCrypt.gensalt());
 
-            var conn = new SQLite().getConnection();
-            var insert = conn.prepareStatement("insert into user (\n" +
+            var conn = new SqlDatabase().getConnection();
+            var insert = conn.prepareStatement("insert into \"user\" (\n" +
                     "                username, email, pw_hash) values (?, ?, ?)");
 
             insert.setString(1, username);
             insert.setString(2, email);
             insert.setString(3, saltedPW);
+
             insert.execute();
 
             conn.close();
@@ -345,7 +348,7 @@ public class WebApplication {
             return "Unauthorised";
         }
 
-        var db = new SQLite();
+        var db = new SqlDatabase();
         var conn = db.getConnection();
 
         var insert = conn.prepareStatement(
@@ -373,7 +376,7 @@ public class WebApplication {
     };
 
     public static Route serveFollowPage = (Request request, Response response) -> {
-        var db = new SQLite();
+        var db = new SqlDatabase();
         var conn = db.getConnection();
 
         var insert = conn.prepareStatement("insert into follower (\n" +
@@ -399,7 +402,7 @@ public class WebApplication {
         conn.close();
 
         response.redirect(URLS.urlFor(URLS.USER_TIMELINE, Map.ofEntries(
-                Map.entry("username", request.params(":username"))
+                Map.entry(USERNAME, request.params(":username"))
         )));
 
         addAlert(request.session(), "You are now following " + request.params(":username"));
@@ -412,7 +415,7 @@ public class WebApplication {
 
     public static Route serveUnfollowPage = (Request request, Response response) -> {
 
-        var db = new SQLite();
+        var db = new SqlDatabase();
         var conn = db.getConnection();
 
         var insert = conn.prepareStatement("delete from follower where who_id=? and whom_id=?");
@@ -428,7 +431,7 @@ public class WebApplication {
         addAlert(request.session(), "You are no longer following " + request.params(":username"));
 
         response.redirect(URLS.urlFor(URLS.USER_TIMELINE, Map.ofEntries(
-                Map.entry("username", request.params(":username"))
+                Map.entry(USERNAME, request.params(":username"))
         )));
 
         PrometheusMetrics metrics = request.attribute("metrics");
@@ -440,10 +443,10 @@ public class WebApplication {
     public static Route serveSimFllws = (Request request, Response response) -> {
         updateLatest(request);
 
-        var db = new SQLite();
+        var db = new SqlDatabase();
         var conn = db.getConnection();
 
-        var who_id = getUserID(new SQLite(), request.params(":username"));
+        var who_id = getUserID(new SqlDatabase(), request.params(":username"));
 
         if (who_id == 0) {
             conn.close();
@@ -511,7 +514,7 @@ public class WebApplication {
 
         if (Objects.equals(request.requestMethod(), "GET")) {
 
-            var insert = conn.prepareStatement("SELECT user.username FROM user INNER JOIN follower ON follower.whom_id=user.user_id WHERE follower.who_id=? LIMIT ?");
+            var insert = conn.prepareStatement("SELECT \"user\".username FROM \"user\" INNER JOIN follower ON follower.whom_id=user.user_id WHERE follower.who_id=? LIMIT ?");
 
             var noFollowers = Integer.parseInt(request.queryParamOrDefault("no", "100"));
 
@@ -524,7 +527,7 @@ public class WebApplication {
             var follows = new Follows();
             follows.follows = new ArrayList<>();
             while (rs.next()) {
-                follows.follows.add(rs.getString("username"));
+                follows.follows.add(rs.getString(USERNAME));
             }
 
             conn.close();
@@ -567,12 +570,15 @@ public class WebApplication {
     public static Route servePublicTimelinePage = (Request request, Response response) -> {
         Map<String, Object> model = new HashMap<>();
 
-        var db = new SQLite();
+        var db = new SqlDatabase();
         var conn = db.getConnection();
 
         var userID = (Integer) request.session().attribute("user_id");
         var loggedInUser = getUser(conn, (userID));
-        if (loggedInUser != null) model.put("user", loggedInUser.getString("username"));
+
+        if (loggedInUser != null && loggedInUser.next()) {
+            model.put("user", loggedInUser.getString(USERNAME));
+        }
 
         // Where does this come from in python?
         model.put("title", "Public Timeline");
@@ -588,12 +594,15 @@ public class WebApplication {
 
     public static Route serveUserTimelinePage = (Request request, Response response) -> {
         Map<String, Object> model = new HashMap<>();
-        var db = new SQLite();
+        var db = new SqlDatabase();
         var conn = db.getConnection();
 
         var userID = (Integer) request.session().attribute("user_id");
         var loggedInUser = getUser(conn, (userID));
-        if (loggedInUser != null) model.put("user", loggedInUser.getString("username"));
+
+        if (loggedInUser != null && loggedInUser.next()) {
+            model.put("user", loggedInUser.getString(USERNAME));
+        }
 
         else if (loggedInUser == null) {
             response.redirect(URLS.PUBLIC_TIMELINE);
@@ -604,13 +613,12 @@ public class WebApplication {
         model.put("endpoint", URLS.USER);
         model.put("title", "My Timeline");
 
-        var statement = conn.prepareStatement(
-                "        select message.*, user.* from message, user\n" +
-                        "        where message.flagged = 0 and message.author_id = user.user_id and (\n" +
-                        "            user.user_id = ? or\n" +
-                        "            user.user_id in (select whom_id from follower\n" +
-                        "                                    where who_id = ?))\n" +
-                        "        order by message.pub_date desc limit ?");
+        var statement = conn.prepareStatement("""
+                select message.*, \"user\".* from message, 
+                \"user\" where message.flagged = 0 and message.author_id = \"user\".user_id 
+                and (\"user\".user_id = ? or \"user\".user_id 
+                in (select whom_id from follower where who_id = ?)) 
+                order by message.pub_date desc limit ?""");
 
         statement.setInt(1, request.session().attribute("user_id"));
         statement.setInt(2, request.session().attribute("user_id"));
@@ -625,7 +633,7 @@ public class WebApplication {
             result.put("text", rs.getString("text"));
             result.put("pub_date", rs.getString("pub_date")); // Type?
             result.put("flagged", rs.getInt("flagged"));
-            result.put("username", rs.getString("username"));
+            result.put(USERNAME, rs.getString(USERNAME));
             result.put("email", rs.getString("email"));
             result.put("pw_hash", rs.getString("pw_hash"));
             results.add(result);
@@ -640,36 +648,37 @@ public class WebApplication {
     public static Route serveUserByUsernameTimelinePage = (Request request, Response response) -> {
         Map<String, Object> model = new HashMap<>();
 
-        var db = new SQLite();
+        var db = new SqlDatabase();
         var conn = db.getConnection();
 
         var userID = (Integer) request.session().attribute("user_id");
         var loggedInUser = getUser(conn, (userID));
-        if (loggedInUser != null) {
-            model.put("user", loggedInUser.getString("username"));
+
+        if (loggedInUser != null && loggedInUser.next()) {
+            model.put("user", loggedInUser.getString(USERNAME));
             model.put("user_id", loggedInUser.getInt("user_id"));
         }
 
         model.put("endpoint", URLS.USER_TIMELINE);
 
         var profileStmt = conn.prepareStatement(
-                "select * from user where username = ?"
+                "select * from \"user\" where username = ?"
         );
         profileStmt.setString(1, request.params(":username"));
         var profileRs = profileStmt.executeQuery();
-        if (profileRs.isClosed()) {
+        if (profileRs.isClosed() || !profileRs.next()) {
             response.status(404);
             conn.close();
             return "404"; // TODO: What does the old one do?
         }
         var profileUser = new HashMap<String, Object>();
         profileUser.put("user_id", profileRs.getInt("user_id"));
-        profileUser.put("username", profileRs.getString("username"));
+        profileUser.put(USERNAME, profileRs.getString(USERNAME));
         profileUser.put("email", profileRs.getString("email"));
         model.put("profile_user", profileUser);
         profileRs.close();
 
-        model.put("title", profileUser.get("username") + "'s Timeline");
+        model.put("title", profileUser.get(USERNAME) + "'s Timeline");
 
         if (userID != null) {
             var followedStmt = conn.prepareStatement("select 1 from follower where\n" +
@@ -677,7 +686,7 @@ public class WebApplication {
             followedStmt.setInt(1, userID);
             followedStmt.setInt(2, (Integer) profileUser.get("user_id"));
             var followedRs = followedStmt.executeQuery();
-            if (!followedRs.isClosed()) {
+            if (!followedRs.isClosed() && followedRs.next()) {
                 model.put("followed", true);
             } else {
                 model.put("followed", false);
@@ -686,10 +695,11 @@ public class WebApplication {
             model.put("followed", false);
         }
 
-        var messageStmt = conn.prepareStatement(
-                "select message.*, user.* from message, user where\n" +
-                        "            user.user_id = message.author_id and user.user_id = ?\n" +
-                        "            order by message.pub_date desc limit ?");
+        var messageStmt = conn.prepareStatement("""
+                select message.*, \"user\".* from message, 
+                \"user\" where \"user\".user_id = message.author_id and \"user\".user_id = ? 
+                order by message.pub_date desc limit ?""");
+
         messageStmt.setInt(1, (int) profileUser.get("user_id"));
         messageStmt.setInt(2, PER_PAGE);
         var messages = new ArrayList<HashMap<String, Object>>();
@@ -701,7 +711,7 @@ public class WebApplication {
             result.put("text", messageRs.getString("text"));
             result.put("pub_date", messageRs.getString("pub_date")); // Type?
             result.put("flagged", messageRs.getInt("flagged"));
-            result.put("username", messageRs.getString("username"));
+            result.put(USERNAME, messageRs.getString(USERNAME));
             result.put("email", messageRs.getString("email"));
             messages.add(result);
         }
@@ -715,11 +725,6 @@ public class WebApplication {
     public static Route serveRegisterPage = (Request request, Response response) -> {
         Map<String, Object> model = new HashMap<>();
 
-        var db = new SQLite();
-        var conn = db.getConnection();
-        var insert = conn.prepareStatement("insert into user (\n" +
-                "username, email, pw_hash) values (?, ?, ?)");
-
         // TODO: Get logged in user (if any)
         // if (userIsLoggedIn) {
         //     response.redirect(URLS.LOGIN);
@@ -727,12 +732,12 @@ public class WebApplication {
         // }
 
         model.put("messages", new ArrayList<String>() {});
-        model.put("username", request.queryParams("username") == null ? "" : request.queryParams("username"));
+        model.put(USERNAME, request.queryParams(USERNAME) == null ? "" : request.queryParams(USERNAME));
         model.put("email", request.queryParams("email") == null ? "" : request.queryParams("email"));
         model.put("title", "Sign Up");
 
         if (request.requestMethod().equals("POST")) {
-            var username = request.queryParams("username");
+            var username = request.queryParams(USERNAME);
             var email = request.queryParams("email");
             var password = request.queryParams("password");
             var password2 = request.queryParams("password2");
@@ -764,18 +769,18 @@ public class WebApplication {
         Map<String, Object> model = new HashMap<>();
         model.put("title", "Sign In");
 
-        var enteredUserName = request.queryParams("username");
+        var enteredUserName = request.queryParams(USERNAME);
         var enteredPW = request.queryParams("password");
 
         if (request.requestMethod().equals("POST")) {
-            var db = new SQLite();
+            var db = new SqlDatabase();
             var connection = db.getConnection();
-            var lookup = connection.prepareStatement("select * from user where\n" +
+            var lookup = connection.prepareStatement("select * from \"user\" where\n" +
                     "            username = ?");
             lookup.setString(1, enteredUserName);
             ResultSet rs = lookup.executeQuery();
 
-            if (rs.isClosed()) {
+            if (rs.isClosed() || !rs.next()) {
                 model.put("error", "Invalid username");
             }
             else if (!BCrypt.checkpw(enteredPW, rs.getString("pw_hash"))) {
@@ -841,7 +846,7 @@ public class WebApplication {
         var filteredMessages = messages.stream().map((message) -> Map.ofEntries(
                Map.entry("content", message.get("text")),
                Map.entry("pub_date", message.get("pub_date")),
-               Map.entry("user", message.get("username"))
+               Map.entry("user", message.get(USERNAME))
        ));
         return filteredMessages.toList();
     };
@@ -853,7 +858,7 @@ public class WebApplication {
     public static Route serveSimMsgsUsr = (Request request, Response response) -> {
         updateLatest(request);
 
-        SQLite db = new SQLite();
+        SqlDatabase db = new SqlDatabase();
         var connection = db.getConnection();
         var userID = getUserID(db, request.params(":username"));
 
@@ -866,9 +871,9 @@ public class WebApplication {
                 return "404 Not Found";
             }
             else {
-                var query = connection.prepareStatement("SELECT message.*, user.* FROM message, user " +
+                var query = connection.prepareStatement("SELECT message.*, \"user\".* FROM message, \"user\" " +
                         "                   WHERE message.flagged = 0 AND" +
-                        "                   user.user_id = message.author_id AND user.user_id = ?" +
+                        "                   \"user\".user_id = message.author_id AND \"user\".user_id = ?" +
                         "                   ORDER BY message.pub_date DESC LIMIT ?" );
                 query.setInt(1, userID);
                 query.setInt(2, noMsgs);
@@ -878,7 +883,7 @@ public class WebApplication {
                     var filteredMessage = new HashMap();
                     filteredMessage.put("content", messages.getString("text"));
                     filteredMessage.put("pub_date", messages.getInt("pub_date"));
-                    filteredMessage.put("user", messages.getString("username"));
+                    filteredMessage.put("user", messages.getString(USERNAME));
                     filteredMessages.add(filteredMessage);
                 }
                 connection.close();
@@ -915,7 +920,7 @@ public class WebApplication {
         updateLatest(request);
 
         var json = gson.fromJson(request.body(), HashMap.class);
-        var username = String.valueOf(json.get("username"));
+        var username = String.valueOf(json.get(USERNAME));
         var email = String.valueOf(json.get("email"));
         var password = String.valueOf(json.get("pwd"));
 
@@ -949,7 +954,7 @@ public class WebApplication {
     };
 
     public static Route serveStats = (Request request, Response response) -> {
-        SQLite db = new SQLite();
+        SqlDatabase db = new SqlDatabase();
         var connection = db.getConnection();
 
         String bucketSizeParam = request.queryParams("bucket_size");
