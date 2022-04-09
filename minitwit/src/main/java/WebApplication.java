@@ -12,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import spark.*;
 import static spark.Spark.*;
 import org.apache.velocity.Template;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.StringWriter;
 import java.sql.Connection;
@@ -82,6 +84,7 @@ public class WebApplication {
     public static int PER_PAGE = 30;
 
     public static Gson gson = new Gson();
+    public static final Logger logger = LoggerFactory.getLogger("Minitwit");
 
     public static PrometheusMetrics metrics = new PrometheusMetrics();
 
@@ -100,8 +103,6 @@ public class WebApplication {
     private static final String METRIC_TYPE_METRICS = "metrics";
 
     public static void main(String[] args) {
-        System.out.println("Hello Minitwit");
-
         var port = System.getenv("MINITWIT_PORT");
         if (port == null) {
             port = "8080";
@@ -123,8 +124,9 @@ public class WebApplication {
 
         after("/*", (req, res) -> {
             long startTime = req.attribute("startTime");
+            long time = -1;
             if (startTime != 0) {
-                long time = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+                time = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
                 metrics.observeRequestTime(
                         time,
                         req.uri().startsWith("/api")
@@ -133,8 +135,14 @@ public class WebApplication {
                         res.status()
                 );
             }
-            // TODO: currently doesn't log query parameters or unusual headers
-            System.out.println(LocalDateTime.now() + " - " + req.uri() + " - " + res.status());
+
+            logger.info("t={} d={} status={} method={} remote_ip={} {}",
+                    LocalDateTime.now(),
+                    time,
+                    res.status(),
+                    req.requestMethod(),
+                    req.ip(),
+                    req.uri() );
         });
 
         //before("/metrics", protectEndpoint("Basic asdf"));
@@ -178,7 +186,7 @@ public class WebApplication {
                 return r.handle(request, response);
             } catch (Exception e) {
                 response.status(500);
-                e.printStackTrace();
+                logger.error("Exception happened while processing request", e);
                 return e.toString();
             }
         };
