@@ -122,8 +122,9 @@ public class WebApplication {
 
         after("/*", (req, res) -> {
             long startTime = req.attribute("startTime");
+            long time = -1;
             if (startTime != 0) {
-                long time = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+                time = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
                 metrics.observeRequestTime(
                         time,
                         req.uri().startsWith("/api")
@@ -133,7 +134,13 @@ public class WebApplication {
                 );
             }
 
-            logger.info("t={} status={} method={} {}", LocalDateTime.now(), res.status(), req.requestMethod(), req.uri() );
+            logger.info("t={} d={} status={} method={} remote_ip={} {}",
+                    LocalDateTime.now(),
+                    time,
+                    res.status(),
+                    req.requestMethod(),
+                    req.ip(),
+                    req.uri() );
         });
 
         //before("/metrics", protectEndpoint("Basic asdf"));
