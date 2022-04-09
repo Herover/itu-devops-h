@@ -1,4 +1,4 @@
-FROM maven:3.8.4-openjdk-17-slim
+FROM maven:3.8.5-openjdk-17-slim
 COPY . /usr/src/minitwit
 WORKDIR /usr/src/minitwit
 RUN ./control.sh build
