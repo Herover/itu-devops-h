@@ -202,6 +202,8 @@ public class WebApplication {
         statement.setInt(1, userId);
         ResultSet rs = statement.executeQuery();
 
+        statement.close();
+
         return rs;
     }
 
@@ -220,6 +222,7 @@ public class WebApplication {
 
         var userID = rs.getInt("user_id");
         conn.close();
+        statement.close();
         return userID;
     }
 
@@ -247,6 +250,7 @@ public class WebApplication {
         }
 
         conn.close();
+        messageStmt.close();
 
         return messages;
     }
@@ -336,6 +340,7 @@ public class WebApplication {
             insert.execute();
 
             conn.close();
+            insert.close();
 
             return null;
         }
@@ -372,6 +377,7 @@ public class WebApplication {
         insert.execute();
 
         conn.close();
+        insert.close();
 
         addAlert(request.session(), "Your message was recorded");
 
@@ -393,6 +399,7 @@ public class WebApplication {
         Integer currentUserID = request.session().attribute("user_id");
         if (currentUserID == null) {
             response.status(401);
+            insert.close();
             return "";
         }
 
@@ -400,6 +407,7 @@ public class WebApplication {
 
         if (whom_id == 0) {
             response.status(404);
+            insert.close();
             return "";
         }
 
@@ -408,6 +416,7 @@ public class WebApplication {
         insert.execute();
 
         conn.close();
+        insert.close();
 
         response.redirect(URLS.urlFor(URLS.USER_TIMELINE, Map.ofEntries(
                 Map.entry(USERNAME, request.params(":username"))
@@ -435,6 +444,7 @@ public class WebApplication {
         insert.execute();
 
         conn.close();
+        insert.close();
 
         addAlert(request.session(), "You are no longer following " + request.params(":username"));
 
@@ -484,6 +494,7 @@ public class WebApplication {
             insert.execute();
 
             conn.close();
+            insert.close();
 
             response.status(204);
 
@@ -511,6 +522,7 @@ public class WebApplication {
             insert.execute();
 
             conn.close();
+            insert.close();
 
             response.status(204);
 
@@ -539,6 +551,7 @@ public class WebApplication {
             }
 
             conn.close();
+            insert.close();
 
             var json = "";
 
@@ -649,6 +662,7 @@ public class WebApplication {
         model.put("messages", results);
 
         conn.close();
+        statement.close();
 
         return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
     };
@@ -726,6 +740,8 @@ public class WebApplication {
         model.put("messages", messages);
 
         conn.close();
+        profileStmt.close();
+        messageStmt.close();
 
         return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
     };
@@ -814,6 +830,7 @@ public class WebApplication {
             }
             rs.close();
             connection.close();
+            lookup.close();
         }
         return WebApplication.render(request.session(), model, Templates.LOGIN);
     };
@@ -895,6 +912,7 @@ public class WebApplication {
                     filteredMessages.add(filteredMessage);
                 }
                 connection.close();
+                query.close();
                 response.status(200);
                 return filteredMessages.stream().toList();
             }
@@ -912,6 +930,7 @@ public class WebApplication {
 
             query.execute();
             connection.close();
+            query.close();
             response.status(204);
 
             PrometheusMetrics metrics = request.attribute("metrics");
@@ -1051,6 +1070,7 @@ public class WebApplication {
 
 
         connection.close();
+        followersQuery.close();
 
         return Map.ofEntries(
                 Map.entry("followerStats", followers),
