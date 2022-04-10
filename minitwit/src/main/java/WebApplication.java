@@ -192,6 +192,8 @@ public class WebApplication {
         statement.setInt(1, userId);
         ResultSet rs = statement.executeQuery();
 
+        statement.close();
+
         return rs;
     }
 
@@ -210,6 +212,7 @@ public class WebApplication {
 
         var userID = rs.getInt("user_id");
         conn.close();
+        statement.close();
         return userID;
     }
 
@@ -237,6 +240,7 @@ public class WebApplication {
         }
 
         conn.close();
+        statement.close();
 
         return messages;
     }
@@ -325,6 +329,7 @@ public class WebApplication {
             insert.execute();
 
             conn.close();
+            statement.close();
 
             return null;
         }
@@ -361,6 +366,7 @@ public class WebApplication {
         insert.execute();
 
         conn.close();
+        insert.close();
 
         addAlert(request.session(), "Your message was recorded");
 
@@ -397,6 +403,7 @@ public class WebApplication {
         insert.execute();
 
         conn.close();
+        insert.close();
 
         response.redirect(URLS.urlFor(URLS.USER_TIMELINE, Map.ofEntries(
                 Map.entry("username", request.params(":username"))
@@ -424,6 +431,7 @@ public class WebApplication {
         insert.execute();
 
         conn.close();
+        insert.close();
 
         addAlert(request.session(), "You are no longer following " + request.params(":username"));
 
@@ -473,6 +481,7 @@ public class WebApplication {
             insert.execute();
 
             conn.close();
+            insert.close();
 
             response.status(204);
 
@@ -500,6 +509,7 @@ public class WebApplication {
             insert.execute();
 
             conn.close();
+            insert.close();
 
             response.status(204);
 
@@ -528,6 +538,7 @@ public class WebApplication {
             }
 
             conn.close();
+            insert.close();
 
             var json = "";
 
@@ -633,6 +644,7 @@ public class WebApplication {
         model.put("messages", results);
 
         conn.close();
+        statement.close();
 
         return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
     };
@@ -708,6 +720,8 @@ public class WebApplication {
         model.put("messages", messages);
 
         conn.close();
+        profileStmt.close();
+        messageStmt.close();
 
         return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
     };
@@ -753,6 +767,8 @@ public class WebApplication {
                 return null;
             }
         }
+        conn.close();
+        insert.close();
 
         return WebApplication.render(request.session(), model, WebApplication.Templates.REGISTER);
     };
