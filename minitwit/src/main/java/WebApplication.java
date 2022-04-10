@@ -240,7 +240,7 @@ public class WebApplication {
         }
 
         conn.close();
-        statement.close();
+        messageStmt.close();
 
         return messages;
     }
@@ -329,7 +329,7 @@ public class WebApplication {
             insert.execute();
 
             conn.close();
-            statement.close();
+            insert.close();
 
             return null;
         }
