@@ -48,3 +48,52 @@ resource "digitalocean_droplet" "web" {
     ]
   }
 }
+
+resource "digitalocean_droplet" "drone" {
+  image    = "ubuntu-18-04-x64"
+  name     = "drone-1"
+  region   = "ams3"
+  size     = "s-1vcpu-1gb"
+  ssh_keys = [
+    digitalocean_ssh_key.leonora.fingerprint
+  ]
+
+  connection {
+    host        = self.ipv4_address
+    user        = "root"
+    type        = "ssh"
+    # If the private key is NOT ~/.ssh/id_rsa, uncomment
+    #private_key = file(var.private_key)
+    timeout     = "2m"
+  }
+}
+
+resource "digitalocean_droplet" "monitoring" {
+  image    = "ubuntu-20-04-x64"
+  name     = "monitoring-1"
+  region   = "ams3"
+  size     = "s-1vcpu-1gb"
+  ssh_keys = [
+    digitalocean_ssh_key.leonora.fingerprint
+  ]
+
+  connection {
+    host        = self.ipv4_address
+    user        = "root"
+    type        = "ssh"
+    # If the private key is NOT ~/.ssh/id_rsa, uncomment
+    #private_key = file(var.private_key)
+    timeout     = "2m"
+  }
+}
+
+resource "digitalocean_droplet" "db" {
+  image    = "ubuntu-20-04-x64"
+  name     = "db-1"
+  region   = "ams3"
+  size     = "s-1vcpu-1gb"
+  ssh_keys = [
+    digitalocean_ssh_key.leonora.fingerprint,
+    digitalocean_ssh_key.smilla.fingerprint
+  ]
+}
