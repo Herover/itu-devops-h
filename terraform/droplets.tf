@@ -4,6 +4,7 @@ resource "digitalocean_droplet" "web" {
   name     = "web-${count.index + 1}"
   region   = "ams3"
   size     = "s-1vcpu-1gb"
+  tags     = ["web-lb"]
   ssh_keys = [
     digitalocean_ssh_key.leonora.fingerprint,
     digitalocean_ssh_key.smilla.fingerprint
