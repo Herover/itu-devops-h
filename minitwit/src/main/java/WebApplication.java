@@ -1,5 +1,7 @@
+import Latest.LatestStore;
 import Metrics.PrometheusMetrics;
 import Metrics.TimerStopper;
+import SqlDatabase.SqlDatabase;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.Gson;
 import com.timgroup.jgravatar.Gravatar;
@@ -90,6 +92,8 @@ public class WebApplication {
 
     // The ID of the latest request made by the simulator
     public static int LATEST = 0;
+
+    private static LatestStore latestStore = new LatestStore();
 
     private static final String USERNAME = "username";
 
@@ -341,10 +345,11 @@ public class WebApplication {
         }
     }
 
-    public static void updateLatest(Request request) {
-        String latest = request.queryParams("latest");
-        if (latest != null) {
-            LATEST = Integer.parseInt(latest);
+    public static void updateLatest(Request request) throws SQLException {
+        String latestStr = request.queryParams("latest");
+        if (latestStr != null) {
+            var latest = Integer.parseInt(latestStr);
+            latestStore.updateLatest(latest);
         }
     }
 
@@ -953,7 +958,7 @@ public class WebApplication {
 
     public static Route serveSimLatest = (Request request, Response response) -> {
         Map<String, Integer> map = new HashMap<>();
-        map.put("latest", LATEST);
+        map.put("latest", latestStore.getLatest());
         return map;
     };
 
