@@ -99,7 +99,7 @@ steps:
     POSTGRES_PASSWORD:
       from_secret: POSTGRES_PASSWORD
     WEB_HOST:
-      "143.198.249.10 206.189.13.233"
+      "164.92.150.233 206.189.13.233"
   commands:
   - apk add --no-cache sshpass openssh
   - ./terraform/deploy.sh $ROOT_PASSWORD $WEB_HOSTS $DRONE_BUILD_NUMBER $DOCKER_USERNAME $DOCKER_PASSWORD $POSTGRES_PASSWORD
@@ -129,4 +129,4 @@ volumes:
 ---
 
 kind: signature
-hmac: d657a23cd53a8d2be9e2752006a21fa15ff0a353d280d812ae068606e97eac2a
+hmac: 0bf3522a2d5fa04bceabeaf21e82aea1f1d25c63a610bf8ecb570b50489ac08d
