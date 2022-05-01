@@ -102,6 +102,7 @@ steps:
       "164.92.150.233 206.189.13.233"
   commands:
   - apk add --no-cache sshpass openssh
+  - chmod +x ./terraform/deploy.sh
   - ./terraform/deploy.sh $ROOT_PASSWORD $WEB_HOSTS $DRONE_BUILD_NUMBER $DOCKER_USERNAME $DOCKER_PASSWORD $POSTGRES_PASSWORD
 
 - name: create github release
