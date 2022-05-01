@@ -17,3 +17,8 @@ create table if not exists message (
   pub_date integer,
   flagged integer
 );
+
+create table if not exists counters (
+  kind varchar primary key,
+  value integer
+);
