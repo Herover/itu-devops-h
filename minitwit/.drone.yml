@@ -103,7 +103,7 @@ steps:
   commands:
   - apk add --no-cache sshpass openssh
   - chmod +x terraform/files/deploy.sh
-  - terraform/files/deploy.sh $ROOT_PASSWORD $WEB_HOSTS $DRONE_BUILD_NUMBER $DOCKER_USERNAME $DOCKER_PASSWORD $POSTGRES_PASSWORD
+  - terraform/files/deploy.sh "$ROOT_PASSWORD" "$WEB_HOSTS" "$DRONE_BUILD_NUMBER" "$DOCKER_USERNAME" "$DOCKER_PASSWORD" "$POSTGRES_PASSWORD"
 
 - name: create github release
   image: alpine:3.15.0
