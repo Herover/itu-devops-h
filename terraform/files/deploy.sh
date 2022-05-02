@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ROOT_PASSWORD=$1
 WEB_HOSTS=$2
 DRONE_BUILD_NUMBER=$3
@@ -7,6 +9,9 @@ POSTGRES_PASSWORD=$6
 
 maxtries=10
 delay=5
+
+# Stop on errors
+set -e
 
 for WEB_HOST in $WEB_HOSTS
 do
@@ -23,22 +28,23 @@ do
 
     echo "Testing server"
     r="NO"
-    tries=0
-    while [ $r != "OK" ] && [ $tries -lt $maxtries]
+    tries=$(( 0 ))
+    while [ "$r" != "OK" ]
     do
+        if [ $tries -eq $maxtries ]
+        then
+            echo "Service on $WEB_HOST is not available after $tries tries!"
+            exit 1
+        fi
+        tries=$(( tries + 1 ))
+
         sleep $delay
-        echo Testing...
+        echo "Testing ($tries)..."
         # If $r is empty then the test will fail, so echo NO into it if server is down
-        r=$(curl -s http://127.0.0.1:8080/status || echo "NO")
+        r=$(curl -s http://$WEB_HOST:8080/status || echo "NO")
     done
 
-    if [ $tries -eq $maxtries ]
-    then
-        echo "Service on $WEB_HOST is not available after $tries tries!"
-        exit 1
-    else
-        echo "Done updating $WEB_HOST..."
-    fi
+    echo "Done updating $WEB_HOST..."
 done
 
 echo "Updated all servers"
