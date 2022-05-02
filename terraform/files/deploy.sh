@@ -41,7 +41,7 @@ do
         sleep $delay
         echo "Testing ($tries)..."
         # If $r is empty then the test will fail, so echo NO into it if server is down
-        r=$(curl -s http://$WEB_HOST:8080/status || echo "NO")
+        r=$(curl -s http://$WEB_HOST/status || echo "NO")
     done
 
     echo "Done updating $WEB_HOST..."
