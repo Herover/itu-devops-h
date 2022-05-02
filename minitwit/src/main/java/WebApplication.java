@@ -81,6 +81,9 @@ public class WebApplication {
         public static final String SIM_LATEST = "/latest";
         public static final String SIM_MSGS_USR = "/msgs/:username";
         public static final String SIM_FLLWS = "/fllws/:username";
+
+
+        public static final String STATUS = "/status";
     }
 
     public static int PER_PAGE = 30;
@@ -152,6 +155,8 @@ public class WebApplication {
         //before("/metrics", protectEndpoint("Basic asdf"));
         get("/metrics", catchRoute(WebApplication.serveMetrics));
         get("/metrics/stats", catchRoute(WebApplication.serveStats), gson::toJson);
+
+        get(URLS.STATUS, catchRoute(WebApplication.serveStatus));
 
         get(URLS.PUBLIC_TIMELINE, catchRoute(WebApplication.servePublicTimelinePage));
         get(URLS.REGISTER, catchRoute(WebApplication.serveRegisterPage));
@@ -1061,5 +1066,11 @@ public class WebApplication {
                 Map.entry("followerStats", followers),
                 Map.entry("followingStats", following)
         );
+    };
+
+    public static Route serveStatus = (Request request, Response response) -> {
+        // Return status code 200 and OK if everything is fine, consider returning something like status 503 Service
+        // Unavailable if the server is unable to process requests.
+        return "OK";
     };
 }

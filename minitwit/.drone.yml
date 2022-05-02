@@ -98,18 +98,12 @@ steps:
       from_secret: root_password
     POSTGRES_PASSWORD:
       from_secret: POSTGRES_PASSWORD
-    WEB_HOST_1:
-      "164.92.150.233"
-    WEB_HOST_2:
-      "206.189.13.233"
+    WEB_HOSTS:
+      "164.92.150.233 206.189.13.233"
   commands:
   - apk add --no-cache sshpass openssh
-  - sshpass -p "$ROOT_PASSWORD" scp -o StrictHostKeyChecking=no terraform/files/update_image.sh root@$WEB_HOST_1:/tmp/
-  - sshpass -p "$ROOT_PASSWORD" ssh -o StrictHostKeyChecking=no root@$WEB_HOST_1 chmod +x /tmp/update_image.sh
-  - sshpass -p "$ROOT_PASSWORD" ssh -o StrictHostKeyChecking=no root@$WEB_HOST_1 /tmp/update_image.sh registry.digitalocean.com/minitwit/minitwit-server $DRONE_BUILD_NUMBER $DOCKER_USERNAME $DOCKER_PASSWORD $POSTGRES_PASSWORD
-  - sshpass -p "$ROOT_PASSWORD" scp -o StrictHostKeyChecking=no terraform/files/update_image.sh root@$WEB_HOST_2:/tmp/
-  - sshpass -p "$ROOT_PASSWORD" ssh -o StrictHostKeyChecking=no root@$WEB_HOST_2 chmod +x /tmp/update_image.sh
-  - sshpass -p "$ROOT_PASSWORD" ssh -o StrictHostKeyChecking=no root@$WEB_HOST_2 /tmp/update_image.sh registry.digitalocean.com/minitwit/minitwit-server $DRONE_BUILD_NUMBER $DOCKER_USERNAME $DOCKER_PASSWORD $POSTGRES_PASSWORD
+  - chmod +x ./terraform/files/deploy.sh
+  - ./terraform/files/deploy.sh $ROOT_PASSWORD $WEB_HOSTS $DRONE_BUILD_NUMBER $DOCKER_USERNAME $DOCKER_PASSWORD $POSTGRES_PASSWORD
 
 - name: create github release
   image: alpine:3.15.0
@@ -136,4 +130,4 @@ volumes:
 ---
 
 kind: signature
-hmac: 0bf3522a2d5fa04bceabeaf21e82aea1f1d25c63a610bf8ecb570b50489ac08d
+hmac: 8d0bb4018bab1b0fcdeac5750d8312f59fa3f4399ff1ee133b305d4c30bf5613
