@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ROOT_PASSWORD=$1
 WEB_HOSTS=$2
