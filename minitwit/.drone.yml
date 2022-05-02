@@ -102,6 +102,7 @@ steps:
       "164.92.150.233 206.189.13.233"
   commands:
   - apk add --no-cache sshpass openssh
+  - ls -al
   - chmod +x terraform/files/deploy.sh
   - terraform/files/deploy.sh $ROOT_PASSWORD $WEB_HOSTS $DRONE_BUILD_NUMBER $DOCKER_USERNAME $DOCKER_PASSWORD $POSTGRES_PASSWORD
 
@@ -130,4 +131,4 @@ volumes:
 ---
 
 kind: signature
-hmac: e983fb2f57766d575d8134b0c681c0c5726a3d437a8f845bd9ea5e6bc02c9a55
+hmac: 57346bf7106a32f2452f7c21d76d791737ab14f973b0189795fc710055c5632b
