@@ -97,6 +97,8 @@ public class WebApplication {
     // The ID of the latest request made by the simulator
     public static int LATEST = 0;
 
+    private static final String KEY_POST_STORE = "postStore";
+
     private static LatestStore latestStore = new LatestStore();
 
     private static final String USERNAME = "username";
@@ -132,7 +134,7 @@ public class WebApplication {
                 req.session().attribute("alerts", new ArrayList<>());
             }
 
-            req.attribute("postStore", postStore);
+            req.attribute(KEY_POST_STORE, postStore);
         });
 
         after("/*", (req, res) -> {
@@ -344,7 +346,7 @@ public class WebApplication {
             return "Unauthorised";
         }
 
-        IPostStore postStore = request.attribute("postStore");
+        IPostStore postStore = request.attribute(KEY_POST_STORE);
 
         postStore.addPost(request.session().attribute("user_id"), request.queryParams("text"));
 
@@ -556,7 +558,7 @@ public class WebApplication {
         var db = new SqlDatabase();
         var conn = db.getConnection();
 
-        IPostStore postStore = request.attribute("postStore");
+        IPostStore postStore = request.attribute(KEY_POST_STORE);
 
         var userID = (Integer) request.session().attribute("user_id");
         var loggedInUser = getUser(conn, (userID));
@@ -582,7 +584,7 @@ public class WebApplication {
         var db = new SqlDatabase();
         var conn = db.getConnection();
 
-        IPostStore postStore = request.attribute("postStore");
+        IPostStore postStore = request.attribute(KEY_POST_STORE);
 
         var userID = (Integer) request.session().attribute("user_id");
         var loggedInUser = getUser(conn, (userID));
@@ -613,7 +615,7 @@ public class WebApplication {
         var db = new SqlDatabase();
         var conn = db.getConnection();
 
-        IPostStore postStore = request.attribute("postStore");
+        IPostStore postStore = request.attribute(KEY_POST_STORE);
 
         var userID = (Integer) request.session().attribute("user_id");
         var loggedInUser = getUser(conn, (userID));
@@ -786,7 +788,7 @@ public class WebApplication {
         // Update LATEST static variable
         updateLatest(request);
 
-        IPostStore postStore = request.attribute("postStore");
+        IPostStore postStore = request.attribute(KEY_POST_STORE);
 
         var messages = postStore.getLatestMessages(PER_PAGE);
         var filteredMessages = messages.stream().map((message) -> Map.ofEntries(
