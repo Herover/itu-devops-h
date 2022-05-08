@@ -1,12 +1,13 @@
 import Latest.LatestStore;
 import Metrics.PrometheusMetrics;
-import Metrics.TimerStopper;
+import Post.PostStore;
 import SqlDatabase.SqlDatabase;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.Gson;
 import com.timgroup.jgravatar.Gravatar;
 import com.timgroup.jgravatar.GravatarDefaultImage;
 import com.timgroup.jgravatar.GravatarRating;
+import minitwit.IPostStore;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.tools.generic.DateTool;
@@ -109,7 +110,7 @@ public class WebApplication {
     private static final String METRIC_TYPE_API = "api";
     private static final String METRIC_TYPE_METRICS = "metrics";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         var port = System.getenv("MINITWIT_PORT");
         if (port == null) {
             port = "8080";
@@ -117,6 +118,9 @@ public class WebApplication {
         port(Integer.parseInt(port));
 
         staticFiles.location("/static");
+
+        var conn = new SqlDatabase().getConnection();
+        IPostStore postStore = new PostStore(conn);
 
         before("/*", (req, res) -> {
             req.attribute("metrics", metrics);
@@ -127,6 +131,8 @@ public class WebApplication {
             if (req.session().isNew()) {
                 req.session().attribute("alerts", new ArrayList<>());
             }
+
+            req.attribute("postStore", postStore);
         });
 
         after("/*", (req, res) -> {
@@ -230,34 +236,6 @@ public class WebApplication {
         var userID = rs.getInt("user_id");
         conn.close();
         return userID;
-    }
-
-    public static ArrayList<HashMap<String, Object>> getMessages() throws SQLException {
-        var db = new SqlDatabase();
-        var conn = db.getConnection();
-
-        var messageStmt = conn.prepareStatement(
-                "select message.*, \"user\".* from message, \"user\"\n" +
-                        "        where message.flagged = 0 and message.author_id = \"user\".user_id\n" +
-                        "        order by message.pub_date desc limit ?");
-        messageStmt.setInt(1, PER_PAGE);
-        var messages = new ArrayList<HashMap<String, Object>>();
-        var messageRs = messageStmt.executeQuery();
-        while (messageRs.next()) {
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("message_id", messageRs.getInt("message_id"));
-            result.put("author_id", messageRs.getInt("author_id"));
-            result.put("text", messageRs.getString("text"));
-            result.put("pub_date", messageRs.getInt("pub_date"));
-            result.put("flagged", messageRs.getInt("flagged"));
-            result.put(USERNAME, messageRs.getString(USERNAME));
-            result.put("email", messageRs.getString("email"));
-            messages.add(result);
-        }
-
-        conn.close();
-
-        return messages;
     }
 
     public static String render(Session session, Map<String, Object> model, String templatePath) {
@@ -366,22 +344,9 @@ public class WebApplication {
             return "Unauthorised";
         }
 
-        var db = new SqlDatabase();
-        var conn = db.getConnection();
+        IPostStore postStore = request.attribute("postStore");
 
-        var insert = conn.prepareStatement(
-            "insert into message (author_id, text, pub_date, flagged)\n" +
-                "            values (?, ?, ?, 0)");
-
-        long unixTime = System.currentTimeMillis() / 1000L;
-
-        insert.setInt(1, request.session().attribute("user_id"));
-        insert.setString(2, request.queryParams("text"));
-        insert.setLong(3, unixTime);
-
-        insert.execute();
-
-        conn.close();
+        postStore.addPost(request.session().attribute("user_id"), request.queryParams("text"));
 
         addAlert(request.session(), "Your message was recorded");
 
@@ -591,6 +556,8 @@ public class WebApplication {
         var db = new SqlDatabase();
         var conn = db.getConnection();
 
+        IPostStore postStore = request.attribute("postStore");
+
         var userID = (Integer) request.session().attribute("user_id");
         var loggedInUser = getUser(conn, (userID));
 
@@ -602,7 +569,7 @@ public class WebApplication {
         model.put("title", "Public Timeline");
         model.put("login", URLS.LOGIN);
 
-        var messages = getMessages();
+        var messages = postStore.getLatestMessages(PER_PAGE);
         model.put("messages", messages);
 
         conn.close();
@@ -614,6 +581,8 @@ public class WebApplication {
         Map<String, Object> model = new HashMap<>();
         var db = new SqlDatabase();
         var conn = db.getConnection();
+
+        IPostStore postStore = request.attribute("postStore");
 
         var userID = (Integer) request.session().attribute("user_id");
         var loggedInUser = getUser(conn, (userID));
@@ -631,32 +600,7 @@ public class WebApplication {
         model.put("endpoint", URLS.USER);
         model.put("title", "My Timeline");
 
-        var statement = conn.prepareStatement("""
-                select message.*, \"user\".* from message, 
-                \"user\" where message.flagged = 0 and message.author_id = \"user\".user_id 
-                and (\"user\".user_id = ? or \"user\".user_id 
-                in (select whom_id from follower where who_id = ?)) 
-                order by message.pub_date desc limit ?""");
-
-        statement.setInt(1, request.session().attribute("user_id"));
-        statement.setInt(2, request.session().attribute("user_id"));
-        statement.setInt(3, WebApplication.PER_PAGE);
-        ResultSet rs = statement.executeQuery();
-
-        var results = new ArrayList<HashMap<String, Object>>();
-        while (rs.next()) {
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("message_id", rs.getInt("message_id"));
-            result.put("author_id", rs.getInt("author_id"));
-            result.put("text", rs.getString("text"));
-            result.put("pub_date", rs.getString("pub_date")); // Type?
-            result.put("flagged", rs.getInt("flagged"));
-            result.put(USERNAME, rs.getString(USERNAME));
-            result.put("email", rs.getString("email"));
-            result.put("pw_hash", rs.getString("pw_hash"));
-            results.add(result);
-        }
-        model.put("messages", results);
+        model.put("messages", postStore.getLatestUserMessages(PER_PAGE, request.session().attribute("user_id")));
 
         conn.close();
 
@@ -668,6 +612,8 @@ public class WebApplication {
 
         var db = new SqlDatabase();
         var conn = db.getConnection();
+
+        IPostStore postStore = request.attribute("postStore");
 
         var userID = (Integer) request.session().attribute("user_id");
         var loggedInUser = getUser(conn, (userID));
@@ -713,27 +659,7 @@ public class WebApplication {
             model.put("followed", false);
         }
 
-        var messageStmt = conn.prepareStatement("""
-                select message.*, \"user\".* from message, 
-                \"user\" where \"user\".user_id = message.author_id and \"user\".user_id = ? 
-                order by message.pub_date desc limit ?""");
-
-        messageStmt.setInt(1, (int) profileUser.get("user_id"));
-        messageStmt.setInt(2, PER_PAGE);
-        var messages = new ArrayList<HashMap<String, Object>>();
-        var messageRs = messageStmt.executeQuery();
-        while (messageRs.next()) {
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("message_id", messageRs.getInt("message_id"));
-            result.put("author_id", messageRs.getInt("author_id"));
-            result.put("text", messageRs.getString("text"));
-            result.put("pub_date", messageRs.getString("pub_date")); // Type?
-            result.put("flagged", messageRs.getInt("flagged"));
-            result.put(USERNAME, messageRs.getString(USERNAME));
-            result.put("email", messageRs.getString("email"));
-            messages.add(result);
-        }
-        model.put("messages", messages);
+        model.put("messages", postStore.getLatestUserMessages(PER_PAGE, (int) profileUser.get("user_id")));
 
         conn.close();
 
@@ -860,7 +786,9 @@ public class WebApplication {
         // Update LATEST static variable
         updateLatest(request);
 
-        var messages = getMessages();
+        IPostStore postStore = request.attribute("postStore");
+
+        var messages = postStore.getLatestMessages(PER_PAGE);
         var filteredMessages = messages.stream().map((message) -> Map.ofEntries(
                Map.entry("content", message.get("text")),
                Map.entry("pub_date", message.get("pub_date")),
