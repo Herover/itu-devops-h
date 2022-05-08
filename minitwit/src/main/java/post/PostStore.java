@@ -16,9 +16,9 @@ public class PostStore implements IPostStore {
     }
 
     public void addPost(int userId, String text) throws SQLException {
-        try (var insert = conn.prepareStatement(
-                "insert into message (author_id, text, pub_date, flagged)\n" +
-                        "values (?, ?, ?, 0)")) {
+        try (var insert = conn.prepareStatement("""
+                insert into message (author_id, text, pub_date, flagged)
+                    values (?, ?, ?, 0)""")) {
 
             long unixTime = System.currentTimeMillis() / 1000L;
 
@@ -32,8 +32,8 @@ public class PostStore implements IPostStore {
 
     public ArrayList<HashMap<String, Object>> getLatestMessages(int perPage) throws SQLException {
         try (var messageStmt = conn.prepareStatement("""
-                select message.*, \"user\".* from message, \"user\"
-                where message.flagged = 0 and message.author_id = \"user\".user_id
+                select message.*, "user".* from message, "user"
+                where message.flagged = 0 and message.author_id = "user".user_id
                 order by message.pub_date desc limit ?""")) {
             messageStmt.setInt(1, perPage);
             var messages = new ArrayList<HashMap<String, Object>>();
@@ -56,9 +56,9 @@ public class PostStore implements IPostStore {
 
     public ArrayList<HashMap<String, Object>> getLatestUserMessages(int perPage, int userId) throws SQLException {
         try (var statement = conn.prepareStatement("""
-                select message.*, \"user\".* from message, 
-                \"user\" where message.flagged = 0 and message.author_id = \"user\".user_id 
-                and (\"user\".user_id = ? or \"user\".user_id 
+                select message.*, "user".* from message, 
+                "user" where message.flagged = 0 and message.author_id = "user".user_id 
+                and ("user".user_id = ? or "user".user_id 
                 in (select whom_id from follower where who_id = ?)) 
                 order by message.pub_date desc limit ?""")) {
 
