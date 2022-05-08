@@ -1,6 +1,6 @@
 import Latest.LatestStore;
 import Metrics.PrometheusMetrics;
-import Post.PostStore;
+import post.PostStore;
 import SqlDatabase.SqlDatabase;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.Gson;

@@ -1,4 +1,4 @@
-package Post;
+package post;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
