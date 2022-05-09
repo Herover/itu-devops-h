@@ -1,5 +1,7 @@
+import Latest.LatestStore;
 import Metrics.PrometheusMetrics;
 import Metrics.TimerStopper;
+import SqlDatabase.SqlDatabase;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.Gson;
 import com.timgroup.jgravatar.Gravatar;
@@ -79,6 +81,9 @@ public class WebApplication {
         public static final String SIM_LATEST = "/latest";
         public static final String SIM_MSGS_USR = "/msgs/:username";
         public static final String SIM_FLLWS = "/fllws/:username";
+
+
+        public static final String STATUS = "/status";
     }
 
     public static int PER_PAGE = 30;
@@ -90,6 +95,8 @@ public class WebApplication {
 
     // The ID of the latest request made by the simulator
     public static int LATEST = 0;
+
+    private static LatestStore latestStore = new LatestStore();
 
     private static final String USERNAME = "username";
 
@@ -148,6 +155,8 @@ public class WebApplication {
         //before("/metrics", protectEndpoint("Basic asdf"));
         get("/metrics", catchRoute(WebApplication.serveMetrics));
         get("/metrics/stats", catchRoute(WebApplication.serveStats), gson::toJson);
+
+        get(URLS.STATUS, catchRoute(WebApplication.serveStatus));
 
         get(URLS.PUBLIC_TIMELINE, catchRoute(WebApplication.servePublicTimelinePage));
         get(URLS.REGISTER, catchRoute(WebApplication.serveRegisterPage));
@@ -341,10 +350,11 @@ public class WebApplication {
         }
     }
 
-    public static void updateLatest(Request request) {
-        String latest = request.queryParams("latest");
-        if (latest != null) {
-            LATEST = Integer.parseInt(latest);
+    public static void updateLatest(Request request) throws SQLException {
+        String latestStr = request.queryParams("latest");
+        if (latestStr != null) {
+            var latest = Integer.parseInt(latestStr);
+            latestStore.updateLatest(latest);
         }
     }
 
@@ -953,7 +963,7 @@ public class WebApplication {
 
     public static Route serveSimLatest = (Request request, Response response) -> {
         Map<String, Integer> map = new HashMap<>();
-        map.put("latest", LATEST);
+        map.put("latest", latestStore.getLatest());
         return map;
     };
 
@@ -1056,5 +1066,11 @@ public class WebApplication {
                 Map.entry("followerStats", followers),
                 Map.entry("followingStats", following)
         );
+    };
+
+    public static Route serveStatus = (Request request, Response response) -> {
+        // Return status code 200 and OK if everything is fine, consider returning something like status 503 Service
+        // Unavailable if the server is unable to process requests.
+        return "OK";
     };
 }
