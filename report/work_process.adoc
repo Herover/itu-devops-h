@@ -1,0 +1,13 @@
+==== Meetings
+
+We had our meetings as a team every week in the exercise session since it was the best time for everyone to meet up. We mostly discussed about what will be happening from then rather than the done activities, distributed the work of that week’s exercises and evaluated finished development. Unfinished tasks and long-term tasks were just surfaced to see the ongoing development unless it was crucial.
+
+We did not really have a lot of online meetings since face-to-face meetings were suffice, and we shared the information either via messages or GitHub issues. Our online meetings were done in case we needed to meet-up as a group for a major change, implementation, or an explanation of a hard-to-understand service.
+
+==== Work Division and Task/Issue Handling
+
+Work divisions for available tasks were also handled at the exercise sessions. While most work division was simple since there were multiple tasks, however, some tasks were indivisible and forced a group member to focus on them for longer.
+
+For the ongoing tasks, online communication with Discord was used since it was much faster than meeting up and was quick to evaluate an action. We had a specific channel for our pull requests, we posted our new requests over there for quick checks and notifications for everyone to see.
+
+If any sort of issue happened that wasn’t depending on the current tasks, a message including the details were also sent so that it can be investigated.
