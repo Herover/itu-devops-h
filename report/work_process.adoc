@@ -1,3 +1,5 @@
+=== Work Process
+
 ==== Meetings
 
 We had our meetings as a team every week in the exercise session since it was the best time for everyone to meet up. We mostly discussed about what will be happening from then rather than the done activities, distributed the work of that week’s exercises and evaluated finished development. Unfinished tasks and long-term tasks just surfaced to see the ongoing development unless it was crucial.
