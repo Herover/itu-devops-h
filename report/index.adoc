@@ -1,0 +1,83 @@
+= Minitwit documentation
+
+June 1st, 2022
+
+DevOps, Software Evolution and Software Maintenance, BSc  - Course code: BSDSESM1KU
+
+Authors:
+
+* Leonora Andrea Lindqvist Nielsen (lann@itu.dk)
+* Ahmet Eren Tomurcuk (ahto@itu.dk)
+* Smilla Maria Dion (smdi@itu.dk)
+* Simon Amundsen (siam@itu.dk)
+* Lucas Heede Vulpius (luhe@itu.dk)
+
+// Apprx. 300 words per section, flexible
+
+== System Perspective
+
+// 3+1 view, include three diagrams and describe entire system
+include::architecture.adoc[]
+// Simon
+
+// List every dependency, technology and tool
+include::dependencies.adoc[]
+// Simon
+
+// Current state of the system (quality assessment, static analysis)
+// (SonarCloud/Qube, Snyk, CodeClimate, semgrep, ErrorProne, BetterCodeHub)
+include::static_analysis.adoc[]
+// Smilla
+
+// Describe our chosen license and if it is compatible with all dependencies
+include::license.adoc[]
+// Lucas
+
+== Process Perspective
+
+// How we worked as a team, division of work
+include::work_process.adoc[]
+// Eren
+
+// Using GitHub issues, PRs, code reviews, branching strategy etc.
+include::development_process.adoc[]
+// Eren
+
+// Describe CI/CD pipeline, all stages and tools, release strategy (Terraform?)
+include::deployment_strategy.adoc[]
+// Leonora
+
+// Why we chose to have a single repository?
+include::repository_organization.adoc[]
+//Lucas
+
+// Describe our monitoring with Grafana and Prometheus
+include::monitoring.adoc[]
+//Simon
+
+// Describe our logging with Grafana Loki / Promtail
+include::logging.adoc[]
+//Lucas
+
+// Brief results of security assessments and pentesting, Skipfish and WMAP (available in GitHub, Skipfish is on Discord, Eren will upload WMAP report too) (more if we have)
+// Mention XSS vulnerability?
+include::security_assesment.adoc[]
+// Leonora, will make a quick security assessment too
+
+// Describe our scaling strategy, load balancing and rolling updates
+include::scaling.adoc[]
+// Smilla
+
+== Lessons Learned Perspective
+
+// Description of major issues, their solutions and important lessons that are learned in regards to: 
+// # Evolution and refactoring
+// # Operation
+// # Maintenance
+// Don't forget to link back to commits, issues etc.
+// Explain DevOps (check jupyter notebook for extras)
+
+// Difficulties with refactoring from Python to Java?
+// Memory leak problem?
+
+include::lesson_learned.adoc[]
