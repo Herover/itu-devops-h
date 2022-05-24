@@ -201,58 +201,61 @@ public class WebApplication {
     public static ResultSet getUser(Connection conn, Integer userId) throws SQLException {
         if (userId == null) return null;
 
-        var statement = conn.prepareStatement("select * from \"user\" where user_id = ?");
+        try (var statement = conn.prepareStatement("select * from \"user\" where user_id = ?")) {
 
-        statement.setInt(1, userId);
-        ResultSet rs = statement.executeQuery();
+            statement.setInt(1, userId);
+            ResultSet rs = statement.executeQuery();
 
-        return rs;
+            return rs;
+
+        }
     }
 
     public static int getUserID(SqlDatabase db, String username) throws SQLException {
-        var conn = db.getConnection();
-        var statement = conn.prepareStatement("select user_id from \"user\" where username = ?");
 
-        statement.setString(1, username);
-        ResultSet rs = statement.executeQuery();
+        try (var conn = db.getConnection(); var statement = conn.prepareStatement("select user_id from \"user\" where username = ?")) {
 
-        // No user with that username found
-        if (rs.isClosed() || !rs.next()) {
-            conn.close();
-            return 0;
+            statement.setString(1, username);
+            ResultSet rs = statement.executeQuery();
+
+            // No user with that username found
+            if (rs.isClosed() || !rs.next()) {
+                return 0;
+            }
+
+            var userID = rs.getInt("user_id");
+            return userID;
         }
 
-        var userID = rs.getInt("user_id");
-        conn.close();
-        return userID;
     }
 
     public static ArrayList<HashMap<String, Object>> getMessages() throws SQLException {
         var db = new SqlDatabase();
-        var conn = db.getConnection();
 
-        var messageStmt = conn.prepareStatement(
-                "select message.*, \"user\".* from message, \"user\"\n" +
-                        "        where message.flagged = 0 and message.author_id = \"user\".user_id\n" +
-                        "        order by message.pub_date desc limit ?");
-        messageStmt.setInt(1, PER_PAGE);
-        var messages = new ArrayList<HashMap<String, Object>>();
-        var messageRs = messageStmt.executeQuery();
-        while (messageRs.next()) {
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("message_id", messageRs.getInt("message_id"));
-            result.put("author_id", messageRs.getInt("author_id"));
-            result.put("text", messageRs.getString("text"));
-            result.put("pub_date", messageRs.getInt("pub_date"));
-            result.put("flagged", messageRs.getInt("flagged"));
-            result.put(USERNAME, messageRs.getString(USERNAME));
-            result.put("email", messageRs.getString("email"));
-            messages.add(result);
+        try (var conn = db.getConnection(); var messageStmt = conn.prepareStatement(
+                                                    "select message.*, \"user\".* from message, \"user\"\n" +
+                                                        "        where message.flagged = 0 and message.author_id = \"user\".user_id\n" +
+                                                        "        order by message.pub_date desc limit ?")) {
+
+
+            messageStmt.setInt(1, PER_PAGE);
+            var messages = new ArrayList<HashMap<String, Object>>();
+            var messageRs = messageStmt.executeQuery();
+            while (messageRs.next()) {
+                HashMap<String, Object> result = new HashMap<>();
+                result.put("message_id", messageRs.getInt("message_id"));
+                result.put("author_id", messageRs.getInt("author_id"));
+                result.put("text", messageRs.getString("text"));
+                result.put("pub_date", messageRs.getInt("pub_date"));
+                result.put("flagged", messageRs.getInt("flagged"));
+                result.put(USERNAME, messageRs.getString(USERNAME));
+                result.put("email", messageRs.getString("email"));
+                messages.add(result);
+            }
+
+            return messages;
+
         }
-
-        conn.close();
-
-        return messages;
     }
 
     public static String render(Session session, Map<String, Object> model, String templatePath) {
@@ -329,19 +332,17 @@ public class WebApplication {
         else {
             String saltedPW = BCrypt.hashpw(password, BCrypt.gensalt());
 
-            var conn = new SqlDatabase().getConnection();
-            var insert = conn.prepareStatement("insert into \"user\" (\n" +
-                    "                username, email, pw_hash) values (?, ?, ?)");
+            try (var conn = new SqlDatabase().getConnection(); var insert = conn.prepareStatement("insert into \"user\" (\n" +
+                                                                                                                    "                username, email, pw_hash) values (?, ?, ?)")) {
 
-            insert.setString(1, username);
-            insert.setString(2, email);
-            insert.setString(3, saltedPW);
+                insert.setString(1, username);
+                insert.setString(2, email);
+                insert.setString(3, saltedPW);
 
-            insert.execute();
+                insert.execute();
 
-            conn.close();
-
-            return null;
+                return null;
+            }
         }
     }
 
@@ -362,203 +363,199 @@ public class WebApplication {
         }
 
         var db = new SqlDatabase();
-        var conn = db.getConnection();
 
-        var insert = conn.prepareStatement(
-            "insert into message (author_id, text, pub_date, flagged)\n" +
-                "            values (?, ?, ?, 0)");
+        try (var conn = db.getConnection(); var insert = conn.prepareStatement(
+                                                                                "insert into message (author_id, text, pub_date, flagged)\n" +
+                                                                                     "            values (?, ?, ?, 0)")) {
 
-        long unixTime = System.currentTimeMillis() / 1000L;
+            long unixTime = System.currentTimeMillis() / 1000L;
 
-        insert.setInt(1, request.session().attribute("user_id"));
-        insert.setString(2, request.queryParams("text"));
-        insert.setLong(3, unixTime);
+            insert.setInt(1, request.session().attribute("user_id"));
+            insert.setString(2, request.queryParams("text"));
+            insert.setLong(3, unixTime);
 
-        insert.execute();
+            insert.execute();
 
-        conn.close();
+            addAlert(request.session(), "Your message was recorded");
 
-        addAlert(request.session(), "Your message was recorded");
+            response.redirect(URLS.USER, 303);
 
-        response.redirect(URLS.USER, 303);
+            PrometheusMetrics metrics = request.attribute("metrics");
+            metrics.incrementMessages(METRIC_TYPE_WEB);
 
-        PrometheusMetrics metrics = request.attribute("metrics");
-        metrics.incrementMessages(METRIC_TYPE_WEB);
-
-        return "";
+            return "";
+        }
     };
 
     public static Route serveFollowPage = (Request request, Response response) -> {
         var db = new SqlDatabase();
-        var conn = db.getConnection();
 
-        var insert = conn.prepareStatement("insert into follower (\n" +
-                "                who_id, whom_id) values (?, ?)");
+        try (var conn = db.getConnection(); var insert = conn.prepareStatement("insert into follower (\n" +
+                                                                                        "                who_id, whom_id) values (?, ?)")) {
 
-        Integer currentUserID = request.session().attribute("user_id");
-        if (currentUserID == null) {
-            response.status(401);
+
+            Integer currentUserID = request.session().attribute("user_id");
+            if (currentUserID == null) {
+                response.status(401);
+                insert.close();
+                return "";
+            }
+
+            var whom_id = getUserID(db, request.params(":username"));
+
+            if (whom_id == 0) {
+                response.status(404);
+                insert.close();
+                return "";
+            }
+
+            insert.setInt(1, currentUserID);
+            insert.setInt(2, whom_id);
+            insert.execute();
+
+            response.redirect(URLS.urlFor(URLS.USER_TIMELINE, Map.ofEntries(
+                    Map.entry(USERNAME, request.params(":username"))
+            )));
+
+            addAlert(request.session(), "You are now following " + request.params(":username"));
+
+            PrometheusMetrics metrics = request.attribute("metrics");
+            metrics.incrementFollows(METRIC_TYPE_WEB);
+
             return "";
         }
-
-        var whom_id = getUserID(db, request.params(":username"));
-
-        if (whom_id == 0) {
-            response.status(404);
-            return "";
-        }
-
-        insert.setInt(1, currentUserID);
-        insert.setInt(2, whom_id);
-        insert.execute();
-
-        conn.close();
-
-        response.redirect(URLS.urlFor(URLS.USER_TIMELINE, Map.ofEntries(
-                Map.entry(USERNAME, request.params(":username"))
-        )));
-
-        addAlert(request.session(), "You are now following " + request.params(":username"));
-
-        PrometheusMetrics metrics = request.attribute("metrics");
-        metrics.incrementFollows(METRIC_TYPE_WEB);
-
-        return "";
     };
 
     public static Route serveUnfollowPage = (Request request, Response response) -> {
 
         var db = new SqlDatabase();
-        var conn = db.getConnection();
 
-        var insert = conn.prepareStatement("delete from follower where who_id=? and whom_id=?");
+        try (var conn = db.getConnection(); var insert = conn.prepareStatement("delete from follower where who_id=? and whom_id=?")) {
 
-        var whom_id = getUserID(db, request.params(":username"));
+            var whom_id = getUserID(db, request.params(":username"));
 
-        insert.setInt(1, request.session().attribute("user_id"));
-        insert.setInt(2, whom_id);
-        insert.execute();
-
-        conn.close();
-
-        addAlert(request.session(), "You are no longer following " + request.params(":username"));
-
-        response.redirect(URLS.urlFor(URLS.USER_TIMELINE, Map.ofEntries(
-                Map.entry(USERNAME, request.params(":username"))
-        )));
-
-        PrometheusMetrics metrics = request.attribute("metrics");
-        metrics.incrementUnfollows(METRIC_TYPE_API);
-
-        return "";
-    };
-
-    public static Route serveSimFllws = (Request request, Response response) -> {
-        updateLatest(request);
-
-        var db = new SqlDatabase();
-        var conn = db.getConnection();
-
-        var who_id = getUserID(new SqlDatabase(), request.params(":username"));
-
-        if (who_id == 0) {
-            conn.close();
-            response.status(404);
-            return "";
-        }
-
-        Gson gson = new Gson();
-        Fllws fllws = gson.fromJson(request.body(), Fllws.class);
-
-
-        if (Objects.equals(request.requestMethod(), "POST") && (fllws.follow != null && !fllws.follow.isEmpty())) {
-
-            var whom_id = getUserID(db, fllws.follow);
-
-            if (whom_id == 0) {
-                conn.close();
-                response.status(404);
-                return "";
-            }
-
-
-            var insert = conn.prepareStatement("insert into follower (who_id, whom_id) values (?, ?)");
-
-            insert.setInt(1, who_id);
+            insert.setInt(1, request.session().attribute("user_id"));
             insert.setInt(2, whom_id);
             insert.execute();
 
-            conn.close();
+            addAlert(request.session(), "You are no longer following " + request.params(":username"));
 
-            response.status(204);
-
-            PrometheusMetrics metrics = request.attribute("metrics");
-            metrics.incrementFollows(METRIC_TYPE_API);
-
-            return "";
-
-        }
-
-        if (Objects.equals(request.requestMethod(), "POST") && (fllws.unfollow != null && !fllws.unfollow.isEmpty())) {
-
-            var whom_id = getUserID(db, fllws.unfollow);
-
-            if (whom_id == 0) {
-                conn.close();
-                response.status(404);
-                return "";
-            }
-
-            var insert = conn.prepareStatement("delete from follower where who_id=? and whom_id=?");
-
-            insert.setInt(1, who_id);
-            insert.setInt(2, whom_id);
-            insert.execute();
-
-            conn.close();
-
-            response.status(204);
+            response.redirect(URLS.urlFor(URLS.USER_TIMELINE, Map.ofEntries(
+                    Map.entry(USERNAME, request.params(":username"))
+            )));
 
             PrometheusMetrics metrics = request.attribute("metrics");
             metrics.incrementUnfollows(METRIC_TYPE_API);
 
             return "";
         }
+    };
 
-        if (Objects.equals(request.requestMethod(), "GET")) {
+    public static Route serveSimFllws = (Request request, Response response) -> {
+        updateLatest(request);
 
-            var insert = conn.prepareStatement("SELECT \"user\".username FROM \"user\" INNER JOIN follower ON follower.whom_id=user.user_id WHERE follower.who_id=? LIMIT ?");
+        var db = new SqlDatabase();
 
-            var noFollowers = Integer.parseInt(request.queryParamOrDefault("no", "100"));
-
-            insert.setInt(1, who_id);
-            insert.setInt(2, noFollowers);
-
-            var rs = insert.executeQuery();
+        try (var conn = db.getConnection()) {
 
 
-            var follows = new Follows();
-            follows.follows = new ArrayList<>();
-            while (rs.next()) {
-                follows.follows.add(rs.getString(USERNAME));
+            var who_id = getUserID(new SqlDatabase(), request.params(":username"));
+
+            if (who_id == 0) {
+                conn.close();
+                response.status(404);
+                return "";
             }
 
-            conn.close();
+            Gson gson = new Gson();
+            Fllws fllws = gson.fromJson(request.body(), Fllws.class);
 
-            var json = "";
 
-            try {
-                json = gson.toJson(follows, Follows.class);
-            } catch (Exception ex) {
-                System.out.println(ex.getMessage());
+            if (Objects.equals(request.requestMethod(), "POST") && (fllws.follow != null && !fllws.follow.isEmpty())) {
+
+                var whom_id = getUserID(db, fllws.follow);
+
+                if (whom_id == 0) {
+                    conn.close();
+                    response.status(404);
+                    return "";
+                }
+
+
+                try (var insert = conn.prepareStatement("insert into follower (who_id, whom_id) values (?, ?)")) {
+
+                    insert.setInt(1, who_id);
+                    insert.setInt(2, whom_id);
+                    insert.execute();
+
+                    response.status(204);
+
+                    PrometheusMetrics metrics = request.attribute("metrics");
+                    metrics.incrementFollows(METRIC_TYPE_API);
+
+                    return "";
+                }
+
             }
 
-            response.status(200);
-            return json;
+            if (Objects.equals(request.requestMethod(), "POST") && (fllws.unfollow != null && !fllws.unfollow.isEmpty())) {
+
+                var whom_id = getUserID(db, fllws.unfollow);
+
+                if (whom_id == 0) {
+                    conn.close();
+                    response.status(404);
+                    return "";
+                }
+
+                try (var insert = conn.prepareStatement("delete from follower where who_id=? and whom_id=?")) {
+
+                    insert.setInt(1, who_id);
+                    insert.setInt(2, whom_id);
+                    insert.execute();
+
+                    response.status(204);
+
+                    PrometheusMetrics metrics = request.attribute("metrics");
+                    metrics.incrementUnfollows(METRIC_TYPE_API);
+
+                    return "";
+                }
+            }
+
+            if (Objects.equals(request.requestMethod(), "GET")) {
+
+                try (var insert = conn.prepareStatement("SELECT \"user\".username FROM \"user\" INNER JOIN follower ON follower.whom_id=user.user_id WHERE follower.who_id=? LIMIT ?")) {
+
+                    var noFollowers = Integer.parseInt(request.queryParamOrDefault("no", "100"));
+
+                    insert.setInt(1, who_id);
+                    insert.setInt(2, noFollowers);
+
+                    var rs = insert.executeQuery();
+
+
+                    var follows = new Follows();
+                    follows.follows = new ArrayList<>();
+                    while (rs.next()) {
+                        follows.follows.add(rs.getString(USERNAME));
+                    }
+
+
+                    var json = "";
+
+                    try {
+                        json = gson.toJson(follows, Follows.class);
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                    }
+
+                    response.status(200);
+                    return json;
+                }
+            }
+
         }
-
-
-        conn.close();
 
         return "";
     };
@@ -584,155 +581,148 @@ public class WebApplication {
         Map<String, Object> model = new HashMap<>();
 
         var db = new SqlDatabase();
-        var conn = db.getConnection();
+        try(var conn = db.getConnection()) {
 
-        var userID = (Integer) request.session().attribute("user_id");
-        var loggedInUser = getUser(conn, (userID));
+            var userID = (Integer) request.session().attribute("user_id");
+            var loggedInUser = getUser(conn, (userID));
 
-        if (loggedInUser != null && loggedInUser.next()) {
-            model.put("user", loggedInUser.getString(USERNAME));
+            if (loggedInUser != null && loggedInUser.next()) {
+                model.put("user", loggedInUser.getString(USERNAME));
+            }
+
+            // Where does this come from in python?
+            model.put("title", "Public Timeline");
+            model.put("login", URLS.LOGIN);
+
+            var messages = getMessages();
+            model.put("messages", messages);
+
+            return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
         }
-
-        // Where does this come from in python?
-        model.put("title", "Public Timeline");
-        model.put("login", URLS.LOGIN);
-
-        var messages = getMessages();
-        model.put("messages", messages);
-
-        conn.close();
-
-        return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
     };
 
     public static Route serveUserTimelinePage = (Request request, Response response) -> {
         Map<String, Object> model = new HashMap<>();
         var db = new SqlDatabase();
-        var conn = db.getConnection();
+        try (var conn = db.getConnection(); var statement = conn.prepareStatement("""
+                    select message.*, \"user\".* from message, 
+                    \"user\" where message.flagged = 0 and message.author_id = \"user\".user_id 
+                    and (\"user\".user_id = ? or \"user\".user_id 
+                    in (select whom_id from follower where who_id = ?)) 
+                    order by message.pub_date desc limit ?""");) {
 
-        var userID = (Integer) request.session().attribute("user_id");
-        var loggedInUser = getUser(conn, (userID));
+                var userID = (Integer) request.session().attribute("user_id");
+                var loggedInUser = getUser(conn, (userID));
 
-        if (loggedInUser != null && loggedInUser.next()) {
-            model.put("user", loggedInUser.getString(USERNAME));
+                if (loggedInUser != null && loggedInUser.next()) {
+                    model.put("user", loggedInUser.getString(USERNAME));
+                } else if (loggedInUser == null) {
+                    response.redirect(URLS.PUBLIC_TIMELINE);
+                    return "";
+                }
+
+                model.put("endpoint", URLS.USER);
+                model.put("title", "My Timeline");
+
+            statement.setInt(1, request.session().attribute("user_id"));
+            statement.setInt(2, request.session().attribute("user_id"));
+            statement.setInt(3, WebApplication.PER_PAGE);
+            ResultSet rs = statement.executeQuery();
+
+            var results = new ArrayList<HashMap<String, Object>>();
+            while (rs.next()) {
+                HashMap<String, Object> result = new HashMap<>();
+                result.put("message_id", rs.getInt("message_id"));
+                result.put("author_id", rs.getInt("author_id"));
+                result.put("text", rs.getString("text"));
+                result.put("pub_date", rs.getString("pub_date")); // Type?
+                result.put("flagged", rs.getInt("flagged"));
+                result.put(USERNAME, rs.getString(USERNAME));
+                result.put("email", rs.getString("email"));
+                result.put("pw_hash", rs.getString("pw_hash"));
+                results.add(result);
+            }
+            model.put("messages", results);
+
+            return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
         }
-
-        else if (loggedInUser == null) {
-            response.redirect(URLS.PUBLIC_TIMELINE);
-            conn.close();
-            return "";
-        }
-
-        model.put("endpoint", URLS.USER);
-        model.put("title", "My Timeline");
-
-        var statement = conn.prepareStatement("""
-                select message.*, \"user\".* from message, 
-                \"user\" where message.flagged = 0 and message.author_id = \"user\".user_id 
-                and (\"user\".user_id = ? or \"user\".user_id 
-                in (select whom_id from follower where who_id = ?)) 
-                order by message.pub_date desc limit ?""");
-
-        statement.setInt(1, request.session().attribute("user_id"));
-        statement.setInt(2, request.session().attribute("user_id"));
-        statement.setInt(3, WebApplication.PER_PAGE);
-        ResultSet rs = statement.executeQuery();
-
-        var results = new ArrayList<HashMap<String, Object>>();
-        while (rs.next()) {
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("message_id", rs.getInt("message_id"));
-            result.put("author_id", rs.getInt("author_id"));
-            result.put("text", rs.getString("text"));
-            result.put("pub_date", rs.getString("pub_date")); // Type?
-            result.put("flagged", rs.getInt("flagged"));
-            result.put(USERNAME, rs.getString(USERNAME));
-            result.put("email", rs.getString("email"));
-            result.put("pw_hash", rs.getString("pw_hash"));
-            results.add(result);
-        }
-        model.put("messages", results);
-
-        conn.close();
-
-        return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
     };
 
     public static Route serveUserByUsernameTimelinePage = (Request request, Response response) -> {
         Map<String, Object> model = new HashMap<>();
 
         var db = new SqlDatabase();
-        var conn = db.getConnection();
+        try (var conn = db.getConnection()) {
 
-        var userID = (Integer) request.session().attribute("user_id");
-        var loggedInUser = getUser(conn, (userID));
+            var userID = (Integer) request.session().attribute("user_id");
+            var loggedInUser = getUser(conn, (userID));
 
-        if (loggedInUser != null && loggedInUser.next()) {
-            model.put("user", loggedInUser.getString(USERNAME));
-            model.put("user_id", loggedInUser.getInt("user_id"));
-        }
-
-        model.put("endpoint", URLS.USER_TIMELINE);
-
-        var profileStmt = conn.prepareStatement(
-                "select * from \"user\" where username = ?"
-        );
-        profileStmt.setString(1, request.params(":username"));
-        var profileRs = profileStmt.executeQuery();
-        if (profileRs.isClosed() || !profileRs.next()) {
-            response.status(404);
-            conn.close();
-            return "404"; // TODO: What does the old one do?
-        }
-        var profileUser = new HashMap<String, Object>();
-        profileUser.put("user_id", profileRs.getInt("user_id"));
-        profileUser.put(USERNAME, profileRs.getString(USERNAME));
-        profileUser.put("email", profileRs.getString("email"));
-        model.put("profile_user", profileUser);
-        profileRs.close();
-
-        model.put("title", profileUser.get(USERNAME) + "'s Timeline");
-
-        if (userID != null) {
-            var followedStmt = conn.prepareStatement("select 1 from follower where\n" +
-                    "follower.who_id = ? and follower.whom_id = ?");
-            followedStmt.setInt(1, userID);
-            followedStmt.setInt(2, (Integer) profileUser.get("user_id"));
-            var followedRs = followedStmt.executeQuery();
-            if (!followedRs.isClosed() && followedRs.next()) {
-                model.put("followed", true);
-            } else {
-                model.put("followed", false);
+            if (loggedInUser != null && loggedInUser.next()) {
+                model.put("user", loggedInUser.getString(USERNAME));
+                model.put("user_id", loggedInUser.getInt("user_id"));
             }
-        } else {
-            model.put("followed", false);
-        }
 
-        var messageStmt = conn.prepareStatement("""
+            model.put("endpoint", URLS.USER_TIMELINE);
+
+            var profileSQL = "select * from \"user\" where username = ?";
+            var followedSQL = "select 1 from follower where\n" +
+                    "follower.who_id = ? and follower.whom_id = ?";
+            var messageSQL = """
                 select message.*, \"user\".* from message, 
                 \"user\" where \"user\".user_id = message.author_id and \"user\".user_id = ? 
-                order by message.pub_date desc limit ?""");
+                order by message.pub_date desc limit ?""";
+            try(var profileStmt = conn.prepareStatement(profileSQL); var followedStmt = conn.prepareStatement(followedSQL);
+                var messageStmt = conn.prepareStatement(messageSQL)) {
+                profileStmt.setString(1, request.params(":username"));
+                var profileRs = profileStmt.executeQuery();
+                if (profileRs.isClosed() || !profileRs.next()) {
+                    response.status(404);
+                    return "404"; // TODO: What does the old one do?
+                }
+                var profileUser = new HashMap<String, Object>();
+                profileUser.put("user_id", profileRs.getInt("user_id"));
+                profileUser.put(USERNAME, profileRs.getString(USERNAME));
+                profileUser.put("email", profileRs.getString("email"));
+                model.put("profile_user", profileUser);
+                profileRs.close();
 
-        messageStmt.setInt(1, (int) profileUser.get("user_id"));
-        messageStmt.setInt(2, PER_PAGE);
-        var messages = new ArrayList<HashMap<String, Object>>();
-        var messageRs = messageStmt.executeQuery();
-        while (messageRs.next()) {
-            HashMap<String, Object> result = new HashMap<>();
-            result.put("message_id", messageRs.getInt("message_id"));
-            result.put("author_id", messageRs.getInt("author_id"));
-            result.put("text", messageRs.getString("text"));
-            result.put("pub_date", messageRs.getString("pub_date")); // Type?
-            result.put("flagged", messageRs.getInt("flagged"));
-            result.put(USERNAME, messageRs.getString(USERNAME));
-            result.put("email", messageRs.getString("email"));
-            messages.add(result);
+                model.put("title", profileUser.get(USERNAME) + "'s Timeline");
+
+
+                if (userID != null) {
+                    followedStmt.setInt(1, userID);
+                    followedStmt.setInt(2, (Integer) profileUser.get("user_id"));
+                    var followedRs = followedStmt.executeQuery();
+                    if (!followedRs.isClosed() && followedRs.next()) {
+                        model.put("followed", true);
+                    } else {
+                        model.put("followed", false);
+                    }
+                } else {
+                    model.put("followed", false);
+                }
+
+
+                messageStmt.setInt(1, (int) profileUser.get("user_id"));
+                messageStmt.setInt(2, PER_PAGE);
+                var messages = new ArrayList<HashMap<String, Object>>();
+                var messageRs = messageStmt.executeQuery();
+                while (messageRs.next()) {
+                    HashMap<String, Object> result = new HashMap<>();
+                    result.put("message_id", messageRs.getInt("message_id"));
+                    result.put("author_id", messageRs.getInt("author_id"));
+                    result.put("text", messageRs.getString("text"));
+                    result.put("pub_date", messageRs.getString("pub_date")); // Type?
+                    result.put("flagged", messageRs.getInt("flagged"));
+                    result.put(USERNAME, messageRs.getString(USERNAME));
+                    result.put("email", messageRs.getString("email"));
+                    messages.add(result);
+                }
+                model.put("messages", messages);
+            }
+
+            return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
         }
-        model.put("messages", messages);
-
-        conn.close();
-
-        return WebApplication.render(request.session(), model, WebApplication.Templates.PUBLIC_TIMELINE);
     };
 
     public static Route serveRegisterPage = (Request request, Response response) -> {
@@ -787,38 +777,35 @@ public class WebApplication {
 
         if (request.requestMethod().equals("POST")) {
             var db = new SqlDatabase();
-            var connection = db.getConnection();
-            var lookup = connection.prepareStatement("select * from \"user\" where\n" +
-                    "            username = ?");
-            lookup.setString(1, enteredUserName);
-            ResultSet rs = lookup.executeQuery();
 
-            if (rs.isClosed() || !rs.next()) {
-                model.put("error", "Invalid username");
+            try(var connection = db.getConnection(); var lookup = connection.prepareStatement("select * from \"user\" where\n" + "            username = ?")) {
+
+                lookup.setString(1, enteredUserName);
+                ResultSet rs = lookup.executeQuery();
+
+                if (rs.isClosed() || !rs.next()) {
+                    model.put("error", "Invalid username");
+                } else if (!BCrypt.checkpw(enteredPW, rs.getString("pw_hash"))) {
+                    model.put("error", "Invalid Password");
+                } else {
+                    var userID = rs.getInt("user_id");
+                    request.session().attribute("user_id", userID);
+
+                    rs.close();
+                    connection.close();
+
+                    addAlert(request.session(), "You were logged in");
+
+                    response.redirect(URLS.USER);
+
+                    PrometheusMetrics metrics = request.attribute("metrics");
+                    metrics.incrementSignins(METRIC_TYPE_WEB);
+
+                    // No need to render due to redirect
+                    // Rendering would clear the alerts too early
+                    return null;
+                }
             }
-            else if (!BCrypt.checkpw(enteredPW, rs.getString("pw_hash"))) {
-                model.put("error", "Invalid Password");
-            }
-            else {
-                var userID = rs.getInt("user_id");
-                request.session().attribute("user_id", userID);
-
-                rs.close();
-                connection.close();
-
-                addAlert(request.session(), "You were logged in");
-
-                response.redirect(URLS.USER);
-
-                PrometheusMetrics metrics = request.attribute("metrics");
-                metrics.incrementSignins(METRIC_TYPE_WEB);
-
-                // No need to render due to redirect
-                // Rendering would clear the alerts too early
-                return null;
-            }
-            rs.close();
-            connection.close();
         }
         return WebApplication.render(request.session(), model, Templates.LOGIN);
     };
@@ -872,59 +859,62 @@ public class WebApplication {
         updateLatest(request);
 
         SqlDatabase db = new SqlDatabase();
-        var connection = db.getConnection();
-        var userID = getUserID(db, request.params(":username"));
+        try (var connection = db.getConnection()) {
+            var userID = getUserID(db, request.params(":username"));
 
-        int noMsgs =  Integer.parseInt(request.queryParamOrDefault("no", "100"));
+            int noMsgs = Integer.parseInt(request.queryParamOrDefault("no", "100"));
 
-        if (request.requestMethod().equals("GET")){
-            if (userID == 0) {
-                connection.close();
-                response.status(404);
-                return "404 Not Found";
-            }
-            else {
-                var query = connection.prepareStatement("SELECT message.*, \"user\".* FROM message, \"user\" " +
-                        "                   WHERE message.flagged = 0 AND" +
-                        "                   \"user\".user_id = message.author_id AND \"user\".user_id = ?" +
-                        "                   ORDER BY message.pub_date DESC LIMIT ?" );
-                query.setInt(1, userID);
-                query.setInt(2, noMsgs);
-                var messages = query.executeQuery();
-                var filteredMessages = new ArrayList<Map>();
-                while(messages.next()) {
-                    var filteredMessage = new HashMap();
-                    filteredMessage.put("content", messages.getString("text"));
-                    filteredMessage.put("pub_date", messages.getInt("pub_date"));
-                    filteredMessage.put("user", messages.getString(USERNAME));
-                    filteredMessages.add(filteredMessage);
+            if (request.requestMethod().equals("GET")) {
+                if (userID == 0) {
+                    connection.close();
+                    response.status(404);
+                    return "404 Not Found";
+                } else {
+                    try (var query = connection.prepareStatement("SELECT message.*, \"user\".* FROM message, \"user\" " +
+                            "                   WHERE message.flagged = 0 AND" +
+                            "                   \"user\".user_id = message.author_id AND \"user\".user_id = ?" +
+                            "                   ORDER BY message.pub_date DESC LIMIT ?")) {
+                        query.setInt(1, userID);
+                        query.setInt(2, noMsgs);
+                        var messages = query.executeQuery();
+                        var filteredMessages = new ArrayList<Map>();
+                        while (messages.next()) {
+                            var filteredMessage = new HashMap();
+                            filteredMessage.put("content", messages.getString("text"));
+                            filteredMessage.put("pub_date", messages.getInt("pub_date"));
+                            filteredMessage.put("user", messages.getString(USERNAME));
+                            filteredMessages.add(filteredMessage);
+                        }
+                        connection.close();
+                        query.close();
+                        response.status(200);
+                        return filteredMessages.stream().toList();
+                    }
                 }
-                connection.close();
-                response.status(200);
-                return filteredMessages.stream().toList();
+            }
+            // Might pose a problem when we POST a message for a user that does not exist (lots of author_id=0 messages) not sure
+            else if (request.requestMethod().equals("POST")) {
+                var requestData = gson.fromJson(request.body(), HashMap.class);
+                var time = System.currentTimeMillis() / 1000L;
+                var text = requestData.get("content");
+
+                try (var query = connection.prepareStatement("INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?, ?, ?, 0)")) {
+                    query.setInt(1, userID);
+                    query.setString(2, text.toString());
+                    query.setLong(3, time);
+
+                    query.execute();
+                    connection.close();
+                    query.close();
+                    response.status(204);
+
+                    PrometheusMetrics metrics = request.attribute("metrics");
+                    metrics.incrementMessages(METRIC_TYPE_API);
+                }
+
+                return "";
             }
         }
-        // Might pose a problem when we POST a message for a user that does not exist (lots of author_id=0 messages) not sure
-        else if (request.requestMethod().equals("POST")) {
-            var requestData = gson.fromJson(request.body(), HashMap.class);
-            var time = System.currentTimeMillis() / 1000L;
-            var text = requestData.get("content");
-
-            var query = connection.prepareStatement("INSERT INTO message (author_id, text, pub_date, flagged) VALUES (?, ?, ?, 0)");
-            query.setInt(1, userID);
-            query.setString(2, text.toString());
-            query.setLong(3, time);
-
-            query.execute();
-            connection.close();
-            response.status(204);
-
-            PrometheusMetrics metrics = request.attribute("metrics");
-            metrics.incrementMessages(METRIC_TYPE_API);
-
-            return "";
-        }
-        connection.close();
         response.status(404);
         return "404 Not Found";
     };
@@ -968,13 +958,13 @@ public class WebApplication {
 
     public static Route serveStats = (Request request, Response response) -> {
         SqlDatabase db = new SqlDatabase();
-        var connection = db.getConnection();
+        try (var connection = db.getConnection()) {
 
-        String bucketSizeParam = request.queryParams("bucket_size");
-        if (bucketSizeParam == null) {
-            bucketSizeParam = "10";
-        }
-        var bucketSize = Integer.parseInt(bucketSizeParam);
+            String bucketSizeParam = request.queryParams("bucket_size");
+            if (bucketSizeParam == null) {
+                bucketSizeParam = "10";
+            }
+            var bucketSize = Integer.parseInt(bucketSizeParam);
 
         /*
         SELECT
@@ -990,76 +980,78 @@ public class WebApplication {
         GROUP BY 1
         ORDER BY 1
          */
-        var followersSql =
-                "SELECT\n" +
-                "   CAST(followings/? AS INT)*? AS bucket_floor, -- CAST(x AS int) == FLOOR(x)\n" +
-                "   COUNT(followings) AS count\n" +
-                "FROM (\n" +
-                "   SELECT\n" +
-                "       who_id,\n" +
-                "       count(whom_id) AS followings\n" +
-                "   FROM follower\n" +
-                "   GROUP BY who_id\n" +
-                ")\n" +
-                "GROUP BY 1\n" +
-                "ORDER BY 1";
-        var followersQuery = connection.prepareStatement(followersSql);
-        followersQuery.setInt(1, bucketSize);
-        followersQuery.setInt(2, bucketSize);
+            var followersSql =
+                    "SELECT\n" +
+                            "   CAST(followings/? AS INT)*? AS bucket_floor, -- CAST(x AS int) == FLOOR(x)\n" +
+                            "   COUNT(followings) AS count\n" +
+                            "FROM (\n" +
+                            "   SELECT\n" +
+                            "       who_id,\n" +
+                            "       count(whom_id) AS followings\n" +
+                            "   FROM follower\n" +
+                            "   GROUP BY who_id\n" +
+                            ")\n" +
+                            "GROUP BY 1\n" +
+                            "ORDER BY 1";
+            ArrayList<Map> followers;
+            try (var followersQuery = connection.prepareStatement(followersSql)) {
+                followersQuery.setInt(1, bucketSize);
+                followersQuery.setInt(2, bucketSize);
 
-        var followersBuckets = followersQuery.executeQuery();
+                var followersBuckets = followersQuery.executeQuery();
 
-        var followers = new ArrayList<Map>();
-        while(followersBuckets.next()) {
-            followers.add(Map.ofEntries(
-                    Map.entry("bucket",
-                            followersBuckets.getInt("bucket_floor")
-                                    + "-"
-                                    + (followersBuckets.getInt("bucket_floor") + bucketSize - 1)
-                    ),
-                    Map.entry("n", followersBuckets.getInt(2))
-            ));
+                followers = new ArrayList<Map>();
+                while (followersBuckets.next()) {
+                    followers.add(Map.ofEntries(
+                            Map.entry("bucket",
+                                    followersBuckets.getInt("bucket_floor")
+                                            + "-"
+                                            + (followersBuckets.getInt("bucket_floor") + bucketSize - 1)
+                            ),
+                            Map.entry("n", followersBuckets.getInt(2))
+                    ));
+                }
+            }
+
+
+            var followingSql =
+                    "SELECT\n" +
+                            "   CAST(followings/? AS INT)*? AS bucket_floor, -- CAST(x AS int) == FLOOR(x)\n" +
+                            "   COUNT(followings) AS count\n" +
+                            "FROM (\n" +
+                            "   SELECT\n" +
+                            "       whom_id,\n" +
+                            "       count(who_id) AS followings\n" +
+                            "   FROM follower\n" +
+                            "   GROUP BY whom_id\n" +
+                            ")\n" +
+                            "GROUP BY 1\n" +
+                            "ORDER BY 1";
+            ArrayList<Map> following;
+            try (var followingQuery = connection.prepareStatement(followingSql)) {
+                followingQuery.setInt(1, bucketSize);
+                followingQuery.setInt(2, bucketSize);
+
+                var followingBuckets = followingQuery.executeQuery();
+
+                following = new ArrayList<Map>();
+                while (followingBuckets.next()) {
+                    following.add(Map.ofEntries(
+                            Map.entry("bucket",
+                                    followingBuckets.getInt("bucket_floor")
+                                            + "-"
+                                            + (followingBuckets.getInt("bucket_floor") + bucketSize - 1)
+                            ),
+                            Map.entry("n", followingBuckets.getInt(2))
+                    ));
+                }
+
+            }
+
+            return Map.ofEntries(
+                    Map.entry("followerStats", followers),
+                    Map.entry("followingStats", following)
+            );
         }
-
-
-
-        var followingSql =
-                "SELECT\n" +
-                        "   CAST(followings/? AS INT)*? AS bucket_floor, -- CAST(x AS int) == FLOOR(x)\n" +
-                        "   COUNT(followings) AS count\n" +
-                        "FROM (\n" +
-                        "   SELECT\n" +
-                        "       whom_id,\n" +
-                        "       count(who_id) AS followings\n" +
-                        "   FROM follower\n" +
-                        "   GROUP BY whom_id\n" +
-                        ")\n" +
-                        "GROUP BY 1\n" +
-                        "ORDER BY 1";
-        var followingQuery = connection.prepareStatement(followingSql);
-        followingQuery.setInt(1, bucketSize);
-        followingQuery.setInt(2, bucketSize);
-
-        var followingBuckets = followingQuery.executeQuery();
-
-        var following = new ArrayList<Map>();
-        while(followingBuckets.next()) {
-            following.add(Map.ofEntries(
-                    Map.entry("bucket",
-                            followingBuckets.getInt("bucket_floor")
-                                    + "-"
-                                    + (followingBuckets.getInt("bucket_floor") + bucketSize - 1)
-                    ),
-                    Map.entry("n", followingBuckets.getInt(2))
-            ));
-        }
-
-
-        connection.close();
-
-        return Map.ofEntries(
-                Map.entry("followerStats", followers),
-                Map.entry("followingStats", following)
-        );
     };
 }
