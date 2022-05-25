@@ -5,6 +5,7 @@
 *DevOps, Software Evolution and Software Maintenance - BSc* +
 Course code: BSDSESM1KU
 
+[.text-center]
 IT University of Copenhagen
 
 [.text-center]
