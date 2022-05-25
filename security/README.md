@@ -85,6 +85,8 @@ We will use the following matrix to review our scenarios
 | Possible | 🟩         | 🟧            | 🟥          |
 | Unlikely | 🟩         | 🟩            | 🟧          |
 
+(Numbers refor to scenarios listed above.)
+
 1. 🟧 As we have only used dependencies with a commercial development team, we consider the risk of it happening to be less likely than for hobby projects, but not unlikely (possible). The impact can range widely, so we put it as medium.
 2. 🟩 We used a battle tested encryption library to we consider this unlikely. Business impact would be tangible (medium).
 3. 🟧 XSS vulnerabilities appear common, so we consider it possible. Same business impact as 2.
