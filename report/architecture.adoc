@@ -1,3 +1,28 @@
-the digram with all servers, systems, etc https://app.diagrams.net/#G1_JgXAicq9f5uZ3SJW8pnrSKhg9PYnSlH
+//the digram with all servers, systems, etc https://app.diagrams.net/#G1_JgXAicq9f5uZ3SJW8pnrSKhg9PYnSlH
 
-docker too?
+//docker too?
+
+== Architecture
+
+The Minitwit application is built on a client-server architecture.
+When connecting to Minitwit, users will connect to and interact with a web server. This web server stores all information about users in a https://www.postgresql.org/[PostgreSQL] database. 
+
+.An overview of the different components 
+image::images/devops_components.png[]
+The web application consists mainly of two classes, one which handles requests to the web server and one that handles connections to the database. There are an additional two helper classes which. One which handles how the latest 
+
+.An overview of the different components involved in MiniTwit
+image::images/devops_module_viewpoint.png[module_view]
+
+The code base is hosted in a single GitHub repository.
+
+
+image::images/devops_deployment.png[deployment_view]
+
+The application is hosted on https://www.digitalocean.com/[Digital Ocean]. To interact with the servers hosted on Digital Ocean we use https://www.terraform.io/[Terraform].  
+
+For aggregating and querying logs we use https://grafana.com/oss/loki/[Grafana Loki], where the ouput of these logs can be monitoried by https://grafana.com/grafana/[Grafana].
+
+Whenever a pull request is made on the main branch the build server provided by https://www.drone.io/[Drone] will build a https://docker.com[Docker] image based on the new code and push it to the https://www.digitalocean.com/products/container-registry[DigitalOcean Container Registry]. This registry will then notify a load balancer that there is a new image which the web servers, that the load balancer manages, will then pull from the registry.
+
+The database server as well as the Drone server and the monitoring server pull images from https://hub.docker.com/[DockerHub] with all their respective necessary dependencies. 

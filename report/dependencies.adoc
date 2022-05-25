@@ -1,0 +1,18 @@
+== Dependencies
+
+The refactored Minitwit web application is written in https://docs.oracle.com/en/java/javase/17/[Java 17] using the web framework https://sparkjava.com/[Spark]. https://velocity.apache.org/engine/2.3/user-guide.html[Apaches Velocity Engine] is used for generating the frontend of the web application. The web application connects to a https://www.postgresql.org/[PostgreSQL] database which stores user information, such as username, password and posts. For managing all these library depencies within Java https://maven.apache.org/index.html[Maven] is utilized.
+
+https://grafana.com/grafana/dashboards/3662[Prometheus] provides a set of metrics which can be graphed in Grafana. Monitoring is managed on a separate server which pulls all relevant images from DockerHub. These are the relevant dependencies:
+
+* Prometheus v2.33.5
+* Grafana OSS 8.4.3
+* Loki v2.3.0
+* Promtail v2.3.0
+
+The Drone server manages its dependencies by pulling an image from DockerHub. In order for the build server to go through all steps in the build process it needs the following dependencies:
+
+* Drone v2.9.1
+* Grafana Loki
+* Snyk
+* Semgrep v1
+* SonarQube 
