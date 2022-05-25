@@ -10,7 +10,7 @@ Authors:
 * Ahmet Eren Tomurcuk (ahto@itu.dk)
 * Smilla Maria Dion (smdi@itu.dk)
 * Simon Amundsen (siam@itu.dk)
-* Lucas Heede Vulpius (luhe@itu.dk)
+* Lucas Heede Vulpius (luvu@itu.dk)
 
 // Apprx. 300 words per section, flexible
 
