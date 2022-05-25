@@ -1,5 +1,4 @@
 === Quality Assessment
-// (SonarCloud/Qube, Snyk, CodeClimate, semgrep, ErrorProne, BetterCodeHub)
 We made use of various tools in the project to keep track of the quality of our code and avoid introducing new bugs. This section will describe each of these tools and how we used them.
 
 ==== Maintainability and Technical Debt
