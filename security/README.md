@@ -59,21 +59,21 @@ drone-1(159.223.9.94)
 
 We consider the following to be technical threats against our web application
 
-1. Information leakage through SQL injection
-2. XSS/script injection
-3. Unauthorized access to user data through faulty authentication mechanism
-4. Security vulnerabilities in dependencies
-5. Supply chain attacks
-
-We also consider security vulnerabilities in default operating system programs and services such as Drone as possible threats. Supply chain attacks (for example malicious docker images in trusted repositories) are also considered threats to our systems.
+* Information leakage through SQL injection
+* XSS/script injection
+* Unauthorized access to user data through faulty authentication mechanism
+* Security vulnerabilities in dependencies
+* Supply chain attacks
+* We also consider security vulnerabilities in default operating system programs and services such as Drone as possible threats. Supply chain attacks (for example malicious docker images in trusted repositories) are also considered threats to our systems.
 
 ### Scenarios
 
-A high severity vulnerability is found in a third party java dependency, widespread exploitation leads to information leaks or remote code execution.
-A faulty authentication mechanism allows unauthorized users to access other users, leading to information leaks and impersonation.
-A XSS vulnerability leads to user impersonation, information leaks.
-A vulnerability is found in Drones access management, leading to remote code execution, source code leaks, secrets leaks.
-A malicious actor gets push access to a code or docker dependency, leading to remote code execution and possible information and secrets leaks.
+1. A high severity vulnerability is found in a third party java dependency, widespread exploitation leads to information leaks or remote code execution.
+2. A faulty authentication mechanism allows unauthorized users to access other users, leading to information leaks and impersonation.
+3. A XSS vulnerability leads to user impersonation, information leaks.
+4. A vulnerability is found in Drones access management, leading to remote code execution, source code leaks, secrets leaks.
+5. A malicious actor gets push access to a code or docker dependency, leading to remote code execution and possible information and secrets leaks.
+
 
 ## Analysis
 
