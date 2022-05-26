@@ -24,4 +24,4 @@ We used the following matrix to score various scenarios:
 4. 🟥 A vulnerability is found in Drones access management, leading to remote code execution, source code leaks, secrets leaks.
 5. 🟧 A malicious actor gets push access to a code or docker dependency, leading to remote code execution and possible information and secrets leaks.
 
-For more information, refer to the link:https://github.com/Herover/itu-devops-h/blob/security-assesment/security/README.md[full report].
+For more information, refer to the link:https://github.com/Herover/itu-devops-h/blob/main/security/README.md[full report].
