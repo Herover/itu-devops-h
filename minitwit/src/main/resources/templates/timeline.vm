@@ -1,6 +1,6 @@
 #parse("/templates/layout.vm")
 #@mainLayout()
-    <h2>$title</h2>
+    <h2>${urls.sanitize($title)}</h2>
     #if ($user)
       #if ($endpoint.equals($USER_TIMELINE))
         <div class=followstatus>
@@ -17,7 +17,7 @@
         </div>
       #elseif ($endpoint.equals($USER))
         <div class=twitbox>
-          <h3>What's on your mind ${user}?</h3>
+          <h3>What's on your mind ${urls.sanitize($user)}?</h3>
           <form action="${urls.urlFor($ADD_MESSAGE)}" method=post>
             <p><input type=text name=text size=60><!--
             --><input type=submit value="Share">
@@ -28,8 +28,8 @@
     <ul class=messages>
     #foreach( $message in $messages )
       <li><img src="$webapp.getGravatarURL(${message.email})"><p>
-        <strong><a href="/${message.username}">${message.username}</a></strong>
-        $message.text
+        <strong><a href="${urls.urlFor($USER_TIMELINE, { "username": ${message.username} })}">${urls.sanitize(${message.username})}</a></strong>
+        $urls.sanitize($message.text)
         <small>
           &mdash;
           $date.format('y-MM-dd @ H:mm', ${message.pub_date} * 1000)
