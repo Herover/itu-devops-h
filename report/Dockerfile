@@ -1,4 +1,4 @@
-FROM ruby:3.1.2-slim
+FROM ruby:alpine3.15
 
 #RUN apt-get update && apt-get install -y \
 #    pandoc \
@@ -7,7 +7,7 @@ FROM ruby:3.1.2-slim
 #    texlive-extra-utils \
 #    texlive-latex-extra
 
-RUN apt-get update && apt-get install asciidoctor=2.0.12-2 -y
+RUN apk add --no-cache asciidoctor=2.0.16-r1
 RUN gem install asciidoctor-pdf
 
 WORKDIR "/data"

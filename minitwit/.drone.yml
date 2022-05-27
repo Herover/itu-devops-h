@@ -106,11 +106,14 @@ steps:
   - terraform/files/deploy.sh "$ROOT_PASSWORD" "$WEB_HOSTS" "$DRONE_BUILD_NUMBER" "$DOCKER_USERNAME" "$DOCKER_PASSWORD" "$POSTGRES_PASSWORD"
 
 - name: create github release
-  image: alpine:3.15.0
+  image: ruby:alpine3.15.0
   environment:
     GH_TOKEN:
       from_secret: GH_TOKEN
   commands:
+  - apk add --no-cache asciidoctor=2.0.16-r1
+  - gem install asciidoctor-pdf
+  - asciidoctor-pdf -r asciidoctor-pdf -b pdf -o docs.pdf docs/index.adoc
   # Install grep with support for P flag not available in bundled grep
   - apk add --no-cache git grep
   - wget https://github.com/cli/cli/releases/download/v2.6.0/gh_2.6.0_linux_amd64.tar.gz
@@ -120,7 +123,7 @@ steps:
   - echo $GH_TOKEN | gh auth login --with-token || true
   # Assume first version tag is the one we want
   - version=$(grep -Po "(?<=\<version\>)[A-Z0-9\.\-]*" minitwit/pom.xml | head -n 1)
-  - gh release create $version --generate-notes
+  - gh release create $version --generate-notes 'docs.pdf#Documentation' './#All files'
 
 volumes:
   - name: dockersock
@@ -130,4 +133,4 @@ volumes:
 ---
 
 kind: signature
-hmac: 9c59592f617f55759bbd5558633c238aa387acf90976129b3731ed5214a53fd5
+hmac: d45cde8bc5ba114e087f0131d5ab5f849992b9d15218162317efd21f4f3dda2a
