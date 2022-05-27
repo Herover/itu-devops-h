@@ -107,7 +107,7 @@ steps:
   - terraform/files/deploy.sh "$ROOT_PASSWORD" "$WEB_HOSTS" "$DRONE_BUILD_NUMBER" "$DOCKER_USERNAME" "$DOCKER_PASSWORD" "$POSTGRES_PASSWORD"
 
 - name: create github release
-  image: ruby:alpine3.15.0
+  image: ruby:alpine3.15
   environment:
     GH_TOKEN:
       from_secret: GH_TOKEN
@@ -134,4 +134,4 @@ volumes:
 ---
 
 kind: signature
-hmac: 911ae82b22ab622a49a01c35ae33f5a397be28573c2c9e7a4ffc98bbdf03a0b7
+hmac: 195b3e89bd56ec954ee6959a5bfca2f882d2bf6cb88a7e9394432934bf485b36
