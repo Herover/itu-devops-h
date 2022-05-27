@@ -4,11 +4,11 @@ In this section we will go through some of the ways that the system was monitore
 
 As described earlier we used Grafana to visualize different aspects of the running application. We monitored:
 
-* Results of the following actions in Minitwit:
+* Actions in Minitwit:
 ** Follows
 ** New messages
-** Signups
-** Followers' count
+** Sign-ups
+** Followers count
 ** Following count
 
 * Status of the server:
@@ -18,8 +18,8 @@ As described earlier we used Grafana to visualize different aspects of the runni
 ** HTTP requests
 ** System uptime
 
-These were used for debugging or checking the health of the server in case of a new merge of code or server faults.
+These were used for debugging or checking the health of the server in case of a new merge messing something up or server faults occurring.
 
-We also have the hardware monitors, e.g., CPU utilization, used RAM for checks etc. if necessary.
+We also have hardware monitors, e.g. CPU utilization, used RAM etc. for checking server status if necessary.
 
-The idea is to have views regarding business, development and system metrics, so people with different point of views can see data relevant for them.
+The idea is to have views regarding business, development and system metrics, so people with different perspectives and roles can see data relevant for them.

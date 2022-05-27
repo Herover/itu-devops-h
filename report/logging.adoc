@@ -1,17 +1,17 @@
 === Logging
 
-A very common logging stack is the ELK stack, which consists of elasticsearch, Logstash and Kibana. However when setting up our monitoring earlier in the project, we opted to use Grafana for our visualizations, which is a technology similar to Kibana. This meant for implementing logging we had two choices, use the traditional ELK stack, or make our Grafana interface multipurpose.
+A very common logging stack is the ELK stack, which consists of elasticsearch, Logstash and Kibana. However when setting up our monitoring earlier in the project, we opted to use Grafana for our visualizations, which is a technology similar to Kibana. This meant that for implementing logging we had two choices: use the traditional ELK stack, or make our Grafana interface multipurpose.
 
-We ended up using Grafana in combination with Loki, to have our monitoring and logs under the same central place, hopefully simplifying things a bit. In addition, the ELK stack required high resource requirements as well. For log aggregation we used another solution by Grafana Labs, namely Loki. Its highly performant, being able to get logs from multiple sources, while being able to index various parts of the log string. This makes us able to sort the logs by time, severity, or any other tags we should find necessary in our debugging.
+We ended up using Grafana in combination with Loki to have our monitoring and logs in the same central place, hopefully simplifying things a bit. In addition, the ELK stack would have required high resource requirements as well. For log aggregation we used another solution by Grafana Labs, namely Loki. Its highly performant, being able to get logs from multiple sources, while being able to index various parts of the log string. This makes us able to sort the logs by time, severity, or any other tags we should find necessary in our debugging.
 
 ==== Log Collection
 
-For the actual local log collection on the machines we use Promtail. It's an agent designed to be used with Loki, and makes log collection easy. It can be run in a docker container, and simply reads the output of another docker container or service, before sending it off to Loki.
+For the actual local log collection on the machines we use Promtail. It's an agent designed to be used with Loki, and makes log collection easy. It can be run in a docker container, and simply reads the output of another docker container or service before sending it off to Loki.
 
 link:https://github.com/Herover/itu-devops-h/pull/123[This is the pull request] that added most of the logging, setting up Promtail and Loki services.
 
-In the code of our API, we added slf4j logger library link:https://github.com/Herover/itu-devops-h/pull/128[in this pull request], and in turn created a log message for every time our web server was pinged. As can be seen in the pull request below, we logged the timestamp, request status code, request method (GET, POST, etc.), IP address, and the URI called.
+In the code of our API, we added slf4j logger library link:https://github.com/Herover/itu-devops-h/pull/128[in this pull request], and in turn created a log message for every time our web server was pinged. As can be seen in the pull requests, we logged the timestamp, request status code, request method (GET, POST, etc.), IP address, and the URI called.
 
 ==== Use
 
-Using the logs we identified errors, such as when the `/metrics/stats` endpoint stopped working after switching database. Using the logs we could identify the problematic statements and fix the SQL query.
+Using the logs we identified errors, such as when the `/metrics/stats` endpoint stopped working after switching database. This meant we could identify the problematic statements and fix the SQL query.
