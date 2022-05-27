@@ -1,0 +1,25 @@
+=== Monitoring
+
+In this section we will go through some of the ways that the system was monitored.
+
+As described earlier we used Grafana to visualize different aspects of the running application. We monitored:
+
+* Results of the following actions in Minitwit:
+** Follows
+** New messages
+** Signups
+** Followers' count
+** Following count
+
+* Status of the server:
+** HTTP errors in the past 24 hours
+** API request processing time
+** Web request processing time
+** HTTP requests
+** System uptime
+
+These were used for debugging or checking the health of the server in case of a new merge of code or server faults.
+
+We also have the hardware monitors, e.g., CPU utilization, used RAM for checks etc. if necessary.
+
+The idea is to have views regarding business, development and system metrics, so people with different point of views can see data relevant for them.

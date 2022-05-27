@@ -1,12 +1,12 @@
 ### Security
 
-We have multiple tools to scan for security. During CI/CD steps we scan with SonarQube which detects problematic java dependencies, and Snyk which also detects problematic docker images and libraries in docker images.
+We have multiple tools to scan for security. During CI/CD steps we scan with SonarQube which detects problematic Java dependencies, and Snyk which also detects problematic docker images and libraries in docker images.
 
-Snyk only runs on deployment due to scan limits on our account, but an improvement could be to do regular nightly scans to detect newly discovered security issues in already running services. These scans could also include third party services packaged in docker such as drone, postgresql etc.
+Snyk only runs on deployment due to scan limits on our account, but an improvement could be to do regular nightly scans to detect newly discovered security issues in already running services. These scans could also include third party services packaged in Docker such as Drone, PostgreSQL etc.
 
 We also run tools such as Skipfish and WMAP, but found the results confusing as they contained multiple false positives because they interpreted unrelated problems as positive results on their tests.
 
-A XSS vulnerability was found by inserting HTML and JavaScript code into different fields.
+An XSS vulnerability was found by inserting HTML and JavaScript code into different fields.
 
 We used the following matrix to score various scenarios:
 

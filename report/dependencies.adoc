@@ -1,18 +1,44 @@
-== Dependencies
+=== Dependencies
 
-The refactored Minitwit web application is written in https://docs.oracle.com/en/java/javase/17/[Java 17] using the web framework https://sparkjava.com/[Spark]. https://velocity.apache.org/engine/2.3/user-guide.html[Apaches Velocity Engine] is used for generating the frontend of the web application. The web application connects to a https://www.postgresql.org/[PostgreSQL] database which stores user information, such as username, password and posts. For managing all these library depencies within Java https://maven.apache.org/index.html[Maven] is utilized.
+The refactored Minitwit web application is written in https://docs.oracle.com/en/java/javase/17/[Java 17] using the web framework https://sparkjava.com/[Spark]. https://velocity.apache.org/engine/2.3/user-guide.html[Apache Velocity Engine] is used for generating the frontend of the web application. The web application connects to a https://www.postgresql.org/[PostgreSQL] database which stores user information, such as username, password and posts. For managing all these library dependencies within Java, https://maven.apache.org/index.html[Maven] is utilized.
 
-https://grafana.com/grafana/dashboards/3662[Prometheus] provides a set of metrics which can be graphed in Grafana. Monitoring is managed on a separate server which pulls all relevant images from DockerHub. These are the relevant dependencies:
-
-* Prometheus v2.33.5
-* Grafana OSS 8.4.3
-* Loki v2.3.0
-* Promtail v2.3.0
+// There's more direct dependencies in pom.xml
+// From drone
 
 The Drone server manages its dependencies by pulling an image from DockerHub. In order for the build server to go through all steps in the build process it needs the following dependencies:
 
 * Drone v2.9.1
 * Grafana Loki
-* Snyk
-* Semgrep v1
 * SonarQube 
+* Semgrep v1
+* Maven:3.8.4
+* Snyk
+* libstdc++, libgc and gcompat to run Snyk
+* sshpass, openssh and curl to update servers
+* Git
+* GitHub CLI to create releases
+* Alpine OS v3.15
+* apk and apt
+* grep
+* Asciidoctor and Asciidoctor-pdf
+* Ruby
+
+Additionally we use https://www.docker.com/[Docker] 20.10.9 to run services and Ubuntu Focal as the operating system.
+
+https://grafana.com/grafana/dashboards/3662[Prometheus] provides a set of metrics which can be visualized in Grafana. Monitoring is managed on a separate server which pulls all relevant images from DockerHub. These are the relevant dependencies:
+
+* Prometheus v2.33.5
+* Grafana OSS 8.4.3
+* Loki v2.3.0
+* Promtail v2.3.0
+* Loki Docker Driver v2.4.2
+* Node Exporter v1.3.1
+
+In addition, we also use the following static analysis and maintainability tools:
+
+* Better Code Hub
+* Code Climate
+* SonarQube
+* ErrorProne
+* Semgrep v1
+* Snyk

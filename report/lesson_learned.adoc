@@ -1,0 +1,14 @@
+=== Lessons learned
+
+
+
+// Description of major issues, their solutions and important lessons that are learned in regards to: 
+// # Evolution and refactoring
+// # Operation
+// # Maintenance
+// Don't forget to link back to commits, issues etc.
+// Explain DevOps (check jupyter notebook for extras)
+
+// Difficulties with refactoring from Python to Java?
+// Memory leak problem?
+// maven dependencies?

@@ -1,0 +1,9 @@
+=== License
+
+The license chosen for this project is the Apache License version 2.0, which can be found in its entirety in the repository as https://github.com/Herover/itu-devops-h/blob/main/license.md[license.md]. 
+This license was chosen after carefully examining the licenses of all dependencies. 
+Most of the dependencies were licensed either under Apache License 2.0 or The MIT License, which are both compatible. 
+This means that we can bundle our whole project under either of them. 
+However two of the dependencies used Lesser General Public License (LGPL) and Mozilla Public License 2.0. 
+These are so-called weak copyleft licenses, meaning all modifications need to be open source - however other dependencies, and our own code, will not inherit the copyleft license. 
+This means simply noting it as an extension in the end of our license will suffice.

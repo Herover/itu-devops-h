@@ -2,27 +2,27 @@
 
 //docker too?
 
-== Architecture
+=== Architecture
 
-The Minitwit application is built on a client-server architecture.
-When connecting to Minitwit, users will connect to and interact with a web server. This web server stores all information about users in a https://www.postgresql.org/[PostgreSQL] database. 
+The Minitwit application is built on a client-server architecture. When connecting to Minitwit through a browser, users will interact with a web server. This web server stores all information about its users in a https://www.postgresql.org/[PostgreSQL] database. 
 
-.An overview of the different components 
+.An overview of the runtime interaction in the system. 
 image::images/devops_components.png[]
-The web application consists mainly of two classes, one which handles requests to the web server and one that handles connections to the database. There are an additional two helper classes which. One which handles how the latest 
 
-.An overview of the different components involved in MiniTwit
+The web application consists of two Java classes: _WebApplication_ and _SqlDatabase_. The first encapsulates the entire Minitwit application and receives user requests, while the latter handles connections to the database initiated by _WebApplication_. Essentially, we kept the simple structure from the original Python application. At the time of writing, we have been working on splitting the _WebApplication_ class into multiple classes to improve cleanliness and maintainability. As an illustration, we have moved logic related to user messages into its own class in https://github.com/Herover/itu-devops-h/pull/163[this pull request]. This process is not done however, which is why we present the web application as a single class in this section.
+
+.An overview of the two Java classes making up the Minitwit application.
 image::images/devops_module_viewpoint.png[module_view]
 
-The code base is hosted in a single GitHub repository.
+The entire Minitwit system, including the web servers, database, CI and monitoring, is hosted on https://www.digitalocean.com/[DigitalOcean]. To interact with and modify the servers hosted on DigitalOcean we use https://www.terraform.io/[Terraform].  
 
+For aggregating and querying logs we use https://grafana.com/oss/loki/[Grafana Loki], where the output of these logs and the current state of the system is monitored by https://grafana.com/grafana/[Grafana] using metrics from https://grafana.com/grafana/dashboards/3662[Prometheus].
 
+Whenever a pull request is merged to the main branch, the build server provided by https://www.drone.io/[Drone] will build a https://docker.com[Docker] image based on the new code and push it to the https://www.digitalocean.com/products/container-registry[DigitalOcean Container Registry]. The build server then notifies the two web servers that there is a new image ready, thus allowing them to pull it and deploy the new code.
+
+The database server as well as the Drone server and the monitoring server pull images from https://hub.docker.com/[DockerHub] with all their necessary dependencies on creation. 
+
+.An overview of the Minitwit infrastructure, showcasing the deployment pipeline.
 image::images/devops_deployment.png[deployment_view]
 
-The application is hosted on https://www.digitalocean.com/[Digital Ocean]. To interact with the servers hosted on Digital Ocean we use https://www.terraform.io/[Terraform].  
-
-For aggregating and querying logs we use https://grafana.com/oss/loki/[Grafana Loki], where the ouput of these logs can be monitoried by https://grafana.com/grafana/[Grafana].
-
-Whenever a pull request is made on the main branch the build server provided by https://www.drone.io/[Drone] will build a https://docker.com[Docker] image based on the new code and push it to the https://www.digitalocean.com/products/container-registry[DigitalOcean Container Registry]. This registry will then notify a load balancer that there is a new image which the web servers, that the load balancer manages, will then pull from the registry.
-
-The database server as well as the Drone server and the monitoring server pull images from https://hub.docker.com/[DockerHub] with all their respective necessary dependencies. 
+// Ad line between Monitoring and Dockerhub like Build Server has, change the notify line "from docker repository to load balancer" to be "from build server to WebApp Server"
