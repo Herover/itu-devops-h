@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.StringWriter;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -49,6 +51,22 @@ public class WebApplication {
         public static final String UNFOLLOW = "/:username/unfollow";
 
 
+        // Replace special HTML chars with HTML entities
+        public static String sanitize(String input) {
+            return input
+                    .replace("&", "&amp;")
+                    .replace("\"", "&quot;")
+                    .replace("'", "&apos;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;");
+        }
+        // Only replace quotes with HTML entities
+        public static String sanitizeQuotes(String input) {
+            return input
+                    .replace("\"", "&quot;")
+                    .replace("'", "&apos;");
+        }
+
         /**
          * Transforms a url with :parameters using a map with keys and values
          * @param url to use
@@ -60,7 +78,7 @@ public class WebApplication {
             String u = url;
             for (String key: values.keySet()) {
                 if (values.get(key) instanceof String) {
-                    u = u.replace(":" + key, (String) values.get(key));
+                    u = u.replace(":" + key, URLEncoder.encode((String) values.get(key), StandardCharsets.UTF_8.toString()));
                 } else if (values.get(key) instanceof Integer) {
                     u = u.replace(":" + key, String.valueOf(values.get(key)));
                 } else {
@@ -68,7 +86,7 @@ public class WebApplication {
                 }
             }
 
-            return u;
+            return sanitizeQuotes(u);
         }
 
         public static String urlFor(String url) throws Exception {
@@ -995,19 +1013,20 @@ public class WebApplication {
         GROUP BY 1
         ORDER BY 1
          */
-        var followersSql =
-                "SELECT\n" +
-                "   CAST(followings/? AS INT)*? AS bucket_floor, -- CAST(x AS int) == FLOOR(x)\n" +
-                "   COUNT(followings) AS count\n" +
-                "FROM (\n" +
-                "   SELECT\n" +
-                "       who_id,\n" +
-                "       count(whom_id) AS followings\n" +
-                "   FROM follower\n" +
-                "   GROUP BY who_id\n" +
-                ")\n" +
-                "GROUP BY 1\n" +
-                "ORDER BY 1";
+        var followersSql = """
+                SELECT
+                   FLOOR(followings/?)*? AS bucket_floor,
+                   COUNT(followings) AS c
+                FROM (
+                   SELECT
+                       who_id,
+                       count(whom_id) AS followings
+                   FROM follower
+                   GROUP BY who_id
+                ) AS s
+                GROUP BY 1
+                ORDER BY 1
+            """;
         var followersQuery = connection.prepareStatement(followersSql);
         followersQuery.setInt(1, bucketSize);
         followersQuery.setInt(2, bucketSize);
@@ -1028,19 +1047,20 @@ public class WebApplication {
 
 
 
-        var followingSql =
-                "SELECT\n" +
-                        "   CAST(followings/? AS INT)*? AS bucket_floor, -- CAST(x AS int) == FLOOR(x)\n" +
-                        "   COUNT(followings) AS count\n" +
-                        "FROM (\n" +
-                        "   SELECT\n" +
-                        "       whom_id,\n" +
-                        "       count(who_id) AS followings\n" +
-                        "   FROM follower\n" +
-                        "   GROUP BY whom_id\n" +
-                        ")\n" +
-                        "GROUP BY 1\n" +
-                        "ORDER BY 1";
+        var followingSql = """
+                SELECT
+                   FLOOR(followings/?)*? AS bucket_floor,
+                   COUNT(followings) AS c
+                FROM (
+                   SELECT
+                       whom_id,
+                       count(who_id) AS followings
+                   FROM follower
+                   GROUP BY whom_id
+                ) AS s
+                GROUP BY 1
+                ORDER BY 1
+            """;
         var followingQuery = connection.prepareStatement(followingSql);
         followingQuery.setInt(1, bucketSize);
         followingQuery.setInt(2, bucketSize);

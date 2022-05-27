@@ -8,7 +8,7 @@
   #if ($user)
     <a href=${USER}>my timeline</a> |
     <a href=${PUBLIC_TIMELINE}>public timeline</a> |
-    <a href=${LOGOUT}>sign out [$user]</a>
+    <a href=${LOGOUT}>sign out [${urls.sanitize($user)}]</a>
   #else
     <a href=${PUBLIC_TIMELINE}>public timeline</a> |
     <a href=${REGISTER}>sign up</a> |
