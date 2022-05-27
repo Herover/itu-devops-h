@@ -1,0 +1,6 @@
+=== Repository Organization
+
+For this project we have chosen a mono-repository setup. 
+These work great, and we would consider that the standard unless you end up on a scale where multiple teams will be working on different systems, perhaps in a project involving microservices. 
+For our project the scope of the system is rather small, and generally you could make a case for having the backend and frontend in two different repositories. 
+However in our case the backend and frontend has a pretty tight coupling, making it not feasible without some intrusive refactoring. 

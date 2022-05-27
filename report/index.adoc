@@ -25,12 +25,15 @@ Lucas Heede Vulpius (luvu@itu.dk)
 
 [.text-left]
 == System Perspective
+This section will illustrate the current state of the Minitwit system through various diagrams and descriptions.
 
 // 3+1 view, include three diagrams and describe entire system
+[.text-left]
 include::architecture.adoc[]
 // Simon
 
 // List every dependency, technology and tool
+[.text-left]
 include::dependencies.adoc[]
 // Simon
 
@@ -45,6 +48,7 @@ include::license.adoc[]
 
 [.text-left]
 == Process Perspective
+This section will describe how we worked together as a team and the process within which development took place.
 
 // How we worked as a team, division of work
 include::work_process.adoc[]
@@ -81,6 +85,7 @@ include::scaling.adoc[]
 
 [.text-left]
 == Lessons Learned Perspective
+This section includes the description of the primary issues and their solutions, and the valuable lessons learned regarding maintenance, operation, evolution and refactoring.
 
 // Description of major issues, their solutions and important lessons that are learned in regards to: 
 // # Evolution and refactoring

@@ -1,23 +1,23 @@
 === Development Process
 
-==== GitHub Issues' Handling
+==== Handling of GitHub Issues
 
-Whole development of our MiniTwit is in a single repository. GitHub issues were utilized in three diverse ways.
+The entire Minitwit application is in a single repository. https://github.com/Herover/itu-devops-h/projects/1[GitHub issues] were utilized in two different ways.
 
-1.	Main tasks and task distribution: Weekly tasks that had to be done were added in GitHub issues for easy tracking and assignment. These issues were also tagged with a milestone.
+1.	*Task distribution:* Weekly course tasks that had to be done were added as GitHub issues for easy tracking and assignment. These issues were also tagged with a milestone.
 
-2.	Found bugs or problems: In case of an occurrence of a bug or a newfound problem, a quick issue with its details opened.
-
-3.	Continuously updated elements: Websites or information which did not give us information where all members could reach, so they were added into GitHub by issues.
+2.	*Found bugs or problems:* In case of an occurrence of a bug or a newfound problem, a quick issue with its details was opened.
 
 GitHub issues were also helpful for organisation since it offered great commenting abilities with text editing support and checklists for ongoing development.
 
 ==== Pull Requests, Branching and Merging
 
-All pull requests were open within their new respective branch, this was done for avoiding mixed up code, while also organising the issue fixing flow. New branches were open mostly for all pull requests, this also helped with going back to old code if required.
+New features were developed on separate branches with descriptive names. As such, all new pull requests were opened from within their own branches. This was done to avoid mixing up code whilst also organising the completion of issues. This also helped with reverting back to old code if required.
 
-Every pull request also required for one person to do a review before merging it to the main branch. There were no decided reviewers for projects (Except licencing, which everyone checked), so anyone free would check the request and allow if it was all right. If not, comments in which places had problems or potential future issues were given and it was rejected.
+Every pull request also required at least one person to do a review before merging it to the main branch. There were no assigned reviewers for specific pull requests (except licensing, which everyone checked), so anyone available would check the pull request and allow it if everything seemed all right. If not, comments pointing out where the code had problems or potential future issues were given and it was rejected. 
+
+More information can be found in the link:https://github.com/Herover/itu-devops-h/blob/main/CONTRIBUTE.md[contribute] file.
 
 ==== Automations
 
-There were also two automations which ran on every pull request, which were SonarCloud Code Analysis and Drone CI pipeline. These were not to block the merge if they failed, but they had helped with testing, bugs, and vulnerabilities.
+On every pull request we also ran the static code analysis tools SonarQube (using SonarCloud), CodeClimate and Semgrep. These helped us test, and find bugs, vulnerabilities and do other code checks. 

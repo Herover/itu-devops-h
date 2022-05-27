@@ -1,18 +1,18 @@
 ### Deployment
 
-#### Minitwit
+#### Minitwit application
 
 To deploy a change to the Minitwit application, a pull request must be merged to main. This action will set off a pipeline in our CI/CD system that goes through the following steps:
 
 [start=0]
 . Pull copy of newest code to docker container
 . Create and push docker image
-   Using Drones “plugins/docker” image, we build a docker image of Minitwit and push it to our private docker registry
+   .. Using Drone's “plugins/docker” image, we build a docker image of Minitwit and push it to our private docker registry
 . Snyk scan
-   Scan the new docker image using snyk for security issues
+   .. Scans the new docker image for security issues
 . Update live docker images
 +
-Using ssh, the Drone server will upload a script to each host. The script will
+Using ssh, the Drone server will upload a script to each host. The script will:
    
 .. Log in to our private docker registry
 .. Pull the new image
@@ -22,21 +22,21 @@ Using ssh, the Drone server will upload a script to each host. The script will
 .. Log out of the docker registry 
 
 +
-If this script fails on a host or the web application doesn’t become accessible with HTTP code 2XX on /status, the deployment will stop and be marked as failed.
+If this script fails on a host or the web application doesn't become accessible with HTTP code 2XX on /status, the deployment will stop and be marked as failed.
    
-. Create GithHub release using the version number in Minitwits pom.xml file.
+. Create GitHub release using the version number in Minitwit's `pom.xml` file.
 
-This rolling release strategy will allow for 0 downtime during upgrades, but might be problematic if 2 servers have different behavior on the same endpoint.
+This rolling release strategy will allow for zero downtime during upgrades, but might be problematic if two servers have different behavior on the same endpoint.
 
 #### System changes
 
-Everything else than our web application must be released semi-manually using different scripts. We use terraform to manage infrastructure and a number of bash scripts to set up the servers. For example to prepare a new web server one must open a terminal in the terraform folder and run `./setup_server_drone.sh $IP`, where the IP can be found using terraforms cli or the hosting providers web panel. Some services need some manual configuration, for a deeper explanation of how to set up each application, refer to the link:https://github.com/Herover/itu-devops-h/blob/main/terraform/README.md[readme].
+Everything else than our web application must be released semi-manually using different scripts. We use Terraform to manage infrastructure and a number of bash scripts to set up the servers. For example to prepare a new web server one must open a terminal in the Terraform folder and run `./setup_server_web.sh $IP`, where the IP can be found using Terraform's CLI or the hosting provider's web panel. Some services need some manual configuration - for a deeper explanation of how to set up each application, refer to the link:https://github.com/Herover/itu-devops-h/blob/main/terraform/README.md[README].
 
-### Simons stuff
+// ### Simons stuff
 
-Whenever a pull request is made on the GitHub repository, the Drone build server will go through a series of steps. It will first clone the repository and then use Semgrep to check for any irregularities in the code such as bugs or general bad code style. Next SonarQube will check the code against some of the same parameters and also check for any vulnerabilities. Then it attempts a build and finally it will run tests. Notably we have not implemented any tests, so this step always passes. It would of course have been beneficial to do testing and ideally we would have written tests to ensure that our code is working as intended. One way of doing this could have been to work test-driven so that we would have the test cases before even writing the functionality itself.
+// Whenever a pull request is made on the GitHub repository, the Drone build server will go through a series of steps. It will first clone the repository and then use Semgrep to check for any irregularities in the code such as bugs or general bad code style. Next SonarQube will check the code against some of the same parameters and also check for any vulnerabilities. Then it attempts a build and finally it will run tests. Notably we have not implemented any tests, so this step always passes. It would of course have been beneficial to do testing and ideally we would have written tests to ensure that our code is working as intended. One way of doing this could have been to work test-driven so that we would have the test cases before even writing the functionality itself.
 
-The results of the steps displayed above will be shown in the pull request and based on this output developers can then decide whether they wish to merge the incoming pull request or not manually.
+// The results of the steps displayed above will be shown in the pull request and based on this output developers can then decide whether they wish to merge the incoming pull request or not manually.
 
-If they decide that the pull request is okay to merge into the main branch the Drone server will initiate a second build and then deploy this build. It will create and push a Docker image to the DigitalOcean registry and then, using Snyk, scan for any vulnerabilities in the code. Then the live docker image created will be updated from the latest build and execute the https://github.com/Herover/itu-devops-h/blob/main/terraform/files/deploy.sh[deploy script]. Finally a release will be created in the GitHub repository.
+// If they decide that the pull request is okay to merge into the main branch the Drone server will initiate a second build and then deploy this build. It will create and push a Docker image to the DigitalOcean registry and then, using Snyk, scan for any vulnerabilities in the code. Then the live docker image created will be updated from the latest build and execute the https://github.com/Herover/itu-devops-h/blob/main/terraform/files/deploy.sh[deploy script]. Finally a release will be created in the GitHub repository.
 
