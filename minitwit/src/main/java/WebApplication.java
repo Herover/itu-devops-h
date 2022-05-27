@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.StringWriter;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -49,6 +51,22 @@ public class WebApplication {
         public static final String UNFOLLOW = "/:username/unfollow";
 
 
+        // Replace special HTML chars with HTML entities
+        public static String sanitize(String input) {
+            return input
+                    .replace("&", "&amp;")
+                    .replace("\"", "&quot;")
+                    .replace("'", "&apos;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;");
+        }
+        // Only replace quotes with HTML entities
+        public static String sanitizeQuotes(String input) {
+            return input
+                    .replace("\"", "&quot;")
+                    .replace("'", "&apos;");
+        }
+
         /**
          * Transforms a url with :parameters using a map with keys and values
          * @param url to use
@@ -60,7 +78,7 @@ public class WebApplication {
             String u = url;
             for (String key: values.keySet()) {
                 if (values.get(key) instanceof String) {
-                    u = u.replace(":" + key, (String) values.get(key));
+                    u = u.replace(":" + key, URLEncoder.encode((String) values.get(key), StandardCharsets.UTF_8.toString()));
                 } else if (values.get(key) instanceof Integer) {
                     u = u.replace(":" + key, String.valueOf(values.get(key)));
                 } else {
@@ -68,7 +86,7 @@ public class WebApplication {
                 }
             }
 
-            return u;
+            return sanitizeQuotes(u);
         }
 
         public static String urlFor(String url) throws Exception {
