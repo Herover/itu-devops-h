@@ -995,19 +995,20 @@ public class WebApplication {
         GROUP BY 1
         ORDER BY 1
          */
-        var followersSql =
-                "SELECT\n" +
-                "   CAST(followings/? AS INT)*? AS bucket_floor, -- CAST(x AS int) == FLOOR(x)\n" +
-                "   COUNT(followings) AS count\n" +
-                "FROM (\n" +
-                "   SELECT\n" +
-                "       who_id,\n" +
-                "       count(whom_id) AS followings\n" +
-                "   FROM follower\n" +
-                "   GROUP BY who_id\n" +
-                ")\n" +
-                "GROUP BY 1\n" +
-                "ORDER BY 1";
+        var followersSql = """
+                SELECT
+                   FLOOR(followings/?)*? AS bucket_floor,
+                   COUNT(followings) AS c
+                FROM (
+                   SELECT
+                       who_id,
+                       count(whom_id) AS followings
+                   FROM follower
+                   GROUP BY who_id
+                ) AS s
+                GROUP BY 1
+                ORDER BY 1
+            """;
         var followersQuery = connection.prepareStatement(followersSql);
         followersQuery.setInt(1, bucketSize);
         followersQuery.setInt(2, bucketSize);
@@ -1028,19 +1029,20 @@ public class WebApplication {
 
 
 
-        var followingSql =
-                "SELECT\n" +
-                        "   CAST(followings/? AS INT)*? AS bucket_floor, -- CAST(x AS int) == FLOOR(x)\n" +
-                        "   COUNT(followings) AS count\n" +
-                        "FROM (\n" +
-                        "   SELECT\n" +
-                        "       whom_id,\n" +
-                        "       count(who_id) AS followings\n" +
-                        "   FROM follower\n" +
-                        "   GROUP BY whom_id\n" +
-                        ")\n" +
-                        "GROUP BY 1\n" +
-                        "ORDER BY 1";
+        var followingSql = """
+                SELECT
+                   FLOOR(followings/?)*? AS bucket_floor,
+                   COUNT(followings) AS c
+                FROM (
+                   SELECT
+                       whom_id,
+                       count(who_id) AS followings
+                   FROM follower
+                   GROUP BY whom_id
+                ) AS s
+                GROUP BY 1
+                ORDER BY 1
+            """;
         var followingQuery = connection.prepareStatement(followingSql);
         followingQuery.setInt(1, bucketSize);
         followingQuery.setInt(2, bucketSize);
