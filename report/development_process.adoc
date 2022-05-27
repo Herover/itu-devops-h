@@ -1,0 +1,23 @@
+=== Development Process
+
+==== GitHub Issues' Handling
+
+Whole development of our MiniTwit is in a single repository. GitHub issues were utilized in three diverse ways.
+
+1.	Main tasks and task distribution: Weekly tasks that had to be done were added in GitHub issues for easy tracking and assignment. These issues were also tagged with a milestone.
+
+2.	Found bugs or problems: In case of an occurrence of a bug or a newfound problem, a quick issue with its details opened.
+
+3.	Continuously updated elements: Websites or information which did not give us information where all members could reach, so they were added into GitHub by issues.
+
+GitHub issues were also helpful for organisation since it offered great commenting abilities with text editing support and checklists for ongoing development.
+
+==== Pull Requests, Branching and Merging
+
+All pull requests were open within their new respective branch, this was done for avoiding mixed up code, while also organising the issue fixing flow. New branches were open mostly for all pull requests, this also helped with going back to old code if required.
+
+Every pull request also required for one person to do a review before merging it to the main branch. There were no decided reviewers for projects (Except licencing, which everyone checked), so anyone free would check the request and allow if it was all right. If not, comments in which places had problems or potential future issues were given and it was rejected.
+
+==== Automations
+
+There were also two automations which ran on every pull request, which were SonarCloud Code Analysis and Drone CI pipeline. These were not to block the merge if they failed, but they had helped with testing, bugs, and vulnerabilities.
