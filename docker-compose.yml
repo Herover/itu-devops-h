@@ -1,17 +1,19 @@
+version: "3.3"  # optional since v1.27.0
+
 services:
-  app:
-    build:
-      context: minitwit
-    ports:
-      - 8080:8080
-    environment:
-      MINITWIT_DB_PASS: minitwitpw
-      MINITWIT_DB_USER: minitwituser
-      MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
-    volumes:
-      - minitwitdb:/data
-    networks:
-      - link
+  #app:
+  #  build:
+  #    context: minitwit
+  #  ports:
+  #    - 8080:8080
+  #  environment:
+  #    MINITWIT_DB_PASS: minitwitpw
+  #    MINITWIT_DB_USER: minitwituser
+  #    MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
+  #  volumes:
+  #    - minitwitdb:/data
+  #  #networks:
+  #  #  - link
 
   db:
     container_name: postgres-db
@@ -25,11 +27,11 @@ services:
       - minitwitdb:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    networks:
-      - link
+    #networks:
+    #  - link
 
-networks:
-  link:
+#networks:
+#  link:
 
 volumes:
   minitwitdb: {}
