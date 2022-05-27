@@ -26,11 +26,11 @@ If this script fails on a host or the web application doesn't become accessible 
    
 . Create GitHub release using the version number in Minitwit's `pom.xml` file.
 
-This rolling release strategy will allow for zero downtime during upgrades, but might be problematic if two servers have different behavior on the same endpoint.
+This rolling release strategy will allow for zero downtime during upgrades, but might be problematic if two servers have different behavior on the same endpoint, which could happen in the middle of the upgrade when one server has been updated and the other hasn't.
 
 #### System changes
 
-Everything else than our web application must be released semi-manually using different scripts. We use Terraform to manage infrastructure and a number of bash scripts to set up the servers. For example to prepare a new web server one must open a terminal in the Terraform folder and run `./setup_server_web.sh $IP`, where the IP can be found using Terraform's CLI or the hosting provider's web panel. Some services need some manual configuration - for a deeper explanation of how to set up each application, refer to the link:https://github.com/Herover/itu-devops-h/blob/main/terraform/README.md[README].
+Everything else than our web application must be released semi-manually using different scripts. We use Terraform to manage infrastructure and a number of bash scripts to set up the servers. For example to prepare a new Drone server one must open a terminal in the Terraform folder and run `./setup_server_drone.sh $IP`, where the IP can be found using Terraform's CLI or the hosting provider's web panel. Some services need some manual configuration - for a deeper explanation of how to set up each application, refer to the link:https://github.com/Herover/itu-devops-h/blob/main/terraform/README.md[README].
 
 // ### Simons stuff
 

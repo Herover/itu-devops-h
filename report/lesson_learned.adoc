@@ -1,5 +1,16 @@
-=== Lessons learned
+In this course we learned less about writing functionality into an application, and more about how to maintain the application and how it evolves. We learned about how to use logs and monitoring to detect issues and react to them. This caused a nice loop of incremental changes and early feedback from our tools and group members. 
 
+We worked a lot with automating tasks, such as code feedback and deployments. We had some problems getting used to using our static analysis tools as, according to their checks, we were at a very bad state code-wise when we started. We had to prioritize our time with new tasks every week, and so we decided to mostly use the tools to ensure that our code did not get worse instead of improving existing code. 
+
+Something else we could have worked more on is "truly" automatic server deployments as we had to write IP addresses manually and hard coded them into config files. Using a tool such as Ansible which provides a mechanism for using templates to generate config files and has a central place to list hosts could have been an improvement. Still, using automated deployments gave more safety when deploying than manually executing scripts and allowed for faster deployments. We also learned that fewer steps between writing code and deploying gave more confidence to the developers. For example, we used to merge to a 'dev' branch and only deploy after merging dev to main. This delayed releases and made developers more anxious during deployments. Merging directly into main made this a less cumbersome experience.
+
+We started using Terraform as our infrastructure-as-code tool very early on, which made it easy to add more servers and provider-specific services such as a managed load balancer and floating IPs. It was a bit problematic in the beginning as the state included confidential information and could not be comitted to Git, but the shared state in the cloud mechanism allowed us to collaborate better.
+
+Using monitoring we detected a memory leak, and SonarQube helped us find the specific code that was causing it. Logs provided a way for us to find code errors and allowed us to gain insights into usage patterns, such as how often our simulated users posted and how many other users they had followed. 
+
+In general, we learned a lot, but also found the experience to be slightly stressful as DevOps includes learning a huge number of tools. Still, being able to write awesome code doesn't matter much if you can't deploy it confidently.
+
+// Another small addition would be finding the updated or new dependencies of Maven could be a little tough sometimes due to changed functions. While this is not a big issue, it was time consuming. This was especially visible on Velocity Tools, in which we had to dig out a different type of the same dependency.
 
 
 // Description of major issues, their solutions and important lessons that are learned in regards to: 
@@ -9,6 +20,9 @@
 // Don't forget to link back to commits, issues etc.
 // Explain DevOps (check jupyter notebook for extras)
 
+// immense research and its time-taking elements
+// 
+
 // Difficulties with refactoring from Python to Java?
 // Memory leak problem?
-// maven dependencies?
+// updating some maven dependencies
