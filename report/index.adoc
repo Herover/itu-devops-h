@@ -1,19 +1,29 @@
-= Minitwit documentation
+[.text-center]
+= Minitwit Documentation
 
+[.text-center]
+*DevOps, Software Evolution and Software Maintenance - BSc* +
+Course code: BSDSESM1KU
+
+[.text-center]
+IT University of Copenhagen
+
+[.text-center]
 June 1st, 2022
 
-DevOps, Software Evolution and Software Maintenance, BSc  - Course code: BSDSESM1KU
+[.text-center]
+*Authors:* +
+Leonora Andrea Lindqvist Nielsen (lann@itu.dk) +
+Ahmet Eren Tomurcuk (ahto@itu.dk) +
+Smilla Maria Dion (smdi@itu.dk) +
+Simon Amundsen (siam@itu.dk) +
+Lucas Heede Vulpius (luvu@itu.dk)
 
-Authors:
-
-* Leonora Andrea Lindqvist Nielsen (lann@itu.dk)
-* Ahmet Eren Tomurcuk (ahto@itu.dk)
-* Smilla Maria Dion (smdi@itu.dk)
-* Simon Amundsen (siam@itu.dk)
-* Lucas Heede Vulpius (luhe@itu.dk)
+---
 
 // Apprx. 300 words per section, flexible
 
+[.text-left]
 == System Perspective
 
 // 3+1 view, include three diagrams and describe entire system
@@ -33,6 +43,7 @@ include::static_analysis.adoc[]
 include::license.adoc[]
 // Lucas
 
+[.text-left]
 == Process Perspective
 
 // How we worked as a team, division of work
@@ -68,6 +79,7 @@ include::security_assesment.adoc[]
 include::scaling.adoc[]
 // Smilla
 
+[.text-left]
 == Lessons Learned Perspective
 
 // Description of major issues, their solutions and important lessons that are learned in regards to: 
