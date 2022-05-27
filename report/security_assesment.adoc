@@ -13,15 +13,15 @@ We used the following matrix to score various scenarios:
 |===
 |          | Low impact | Medium impact | High impact 
 
-| Likely   | 🟩         | 🟥            | 🟥          
-| Possible | 🟩         | 🟧            | 🟥          
-| Unlikely | 🟩         | 🟩            | 🟧          
+| Likely   a|image::images/green_square.png[green,14,14]  a|image::images/red_square.png[red,14,14]        a|image::images/red_square.png[red,14,14]          
+| Possible a|image::images/green_square.png[green,14,14]  a|image::images/orange_square.png[orange,14,14]  a|image::images/red_square.png[red,14,14]
+| Unlikely a|image::images/green_square.png[green,14,14]  a|image::images/green_square.png[green,14,14]    a|image::images/red_square.png[orange,14,14]
 |===
 
-1. 🟧 A high severity vulnerability is found in a third party java dependency, widespread exploitation leads to information leaks or remote code execution.
-2. 🟩 A faulty authentication mechanism allows unauthorized users to access other users, leading to information leaks and impersonation.
-3. 🟧 A XSS vulnerability leads to user impersonation, information leaks.
-4. 🟥 A vulnerability is found in Drones access management, leading to remote code execution, source code leaks, secrets leaks.
-5. 🟧 A malicious actor gets push access to a code or docker dependency, leading to remote code execution and possible information and secrets leaks.
+1. image:images/orange_square.png[orange,14,14] A high severity vulnerability is found in a third party java dependency, widespread exploitation leads to information leaks or remote code execution.
+2. image:images/green_square.png[green,14,14] A faulty authentication mechanism allows unauthorized users to access other users, leading to information leaks and impersonation.
+3. image:images/orange_square.png[orange,14,14] A XSS vulnerability leads to user impersonation, information leaks.
+4. image:images/red_square.png[red,14,14] A vulnerability is found in Drones access management, leading to remote code execution, source code leaks, secrets leaks.
+5. image:images/orange_square.png[orange,14,14] A malicious actor gets push access to a code or docker dependency, leading to remote code execution and possible information and secrets leaks.
 
 For more information, refer to the link:https://github.com/Herover/itu-devops-h/blob/main/security/README.md[full report].
