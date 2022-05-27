@@ -124,7 +124,7 @@ steps:
   - echo $GH_TOKEN | gh auth login --with-token || true
   # Assume first version tag is the one we want
   - version=$(grep -Po "(?<=\<version\>)[A-Z0-9\.\-]*" minitwit/pom.xml | head -n 1)
-  - gh release create $version --generate-notes 'report/build/docs.pdf#Documentation' './#All files'
+  - gh release create $version --generate-notes 'report/build/docs.pdf#Documentation'
 
 volumes:
   - name: dockersock
@@ -134,4 +134,4 @@ volumes:
 ---
 
 kind: signature
-hmac: dfa1f6860cf5602f29d2364558e76c60e1d7d8d9cff730308e56f193e33adb2d
+hmac: 293a51ad408e3509ea1e660ad78f4a425c9ad768d68480047950828ef28b0cf9
