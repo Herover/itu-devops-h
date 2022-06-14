@@ -99,7 +99,7 @@ To mitigate the risks from these scenarios, we will deploy code scanning using d
 
 A pentest was performed using automated tools and manual techniques. 
 
-Tools used were skipfish and **fill me in**, unfortunately the tools often returned inaccurate results as the application would get overloaded and return errors unrelated to the specific test being run by the tool.
+Tools used were skipfish and WMAP, unfortunately the tools often returned inaccurate results as the application would get overloaded and return errors unrelated to the specific test being run by the tool.
 
 A manual test found no SQL injection vulnerabilities, but we did find paths to XSS injection attacks in all user input that may show user supplied data on the website (3). During development we’ve also had vulnerable dependencies in our application and docker images, which was detected by security scanners (snyk, Github dependabot).
 
