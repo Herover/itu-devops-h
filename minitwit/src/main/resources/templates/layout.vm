@@ -3,7 +3,7 @@
 <title>${title} | MiniTwit</title>
 <link rel=stylesheet type=text/css href="/style.css">
 <div class=page>
-  <h1>MiniTwit</h1>
+  <h1>MiniTwit Exam Time!</h1>
   <div class=navigation>
   #if ($user)
     <a href=${USER}>my timeline</a> |
